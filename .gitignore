@@ -1,0 +1,12 @@
+# Firebase cache & runtime
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+
+# Node / dependencies (if any)
+node_modules/
+npm-debug.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db

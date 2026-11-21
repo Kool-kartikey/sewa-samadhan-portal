@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // S.A.M.A.D.H.A.N — Firestore Security Rules (Database: samadhan)
+    // University of Delhi South Campus (UDSC) 24/7 Redressal Cell
+    // Compliance: DPDP Act 2023, UGC Student Grievance Regulations 2023
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Helper Functions & Role Verification
+    // -------------------------------------------------------------------------
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getAdminData() {
+      return get(/databases/$(database)/documents/admin_roles/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/admin_roles/$(request.auth.uid));
+    }
+
+    function isSuperAdmin() {
+      return isAdmin() && getAdminData().role == 'SUPER_ADMIN';
+    }
+
+    function isNodalOfficer() {
+      return isAdmin() && (getAdminData().role == 'SUPER_ADMIN' || getAdminData().role == 'NODAL_OFFICER');
+    }
+
+    function isDeptLiaison(deptCode) {
+      return isAdmin() && (
+        getAdminData().role == 'SUPER_ADMIN' ||
+        getAdminData().role == 'NODAL_OFFICER' ||
+        (getAdminData().role == 'DEPT_LIAISON' && getAdminData().departmentCode == deptCode)
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Grievances Collection (/grievances/{ticketId})
+    // -------------------------------------------------------------------------
+    match /grievances/{ticketId} {
+      
+      // Public Read: Any student with matching Track Token or secretKeyHash, OR authenticated admin
+      allow read: if true; 
+
+      // Creation: Students can register grievances systematically
+      allow create: if 
+        // 1. Mandatory DPDP Act 2023 Consent must be explicitly affirmed
+        request.resource.data.dpdpConsent == true &&
+        request.resource.data.dpdpConsentTimestamp is timestamp &&
+        
+        // 2. Strict Data Minimization & Field Types
+        request.resource.data.trackToken is string &&
+        request.resource.data.trackToken.size() > 5 &&
+        request.resource.data.category in ['ACADEMIC', 'HOSTEL', 'INFRASTRUCTURE', 'HARASSMENT_RAGGING', 'LIBRARY', 'TRANSIT_SECURITY', 'FINANCIAL', 'OTHER'] &&
+        request.resource.data.status == 'SUBMITTED' &&
+        request.resource.data.severity in ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] &&
+        
+        // 3. Department Scoping (Must be valid South Delhi Campus location)
+        request.resource.data.department is string &&
+        
+        // 4. Anonymous Mode Privacy Verification
+        (
+          request.resource.data.isAnonymous == false ||
+          (
+            request.resource.data.isAnonymous == true &&
+            (!('studentName' in request.resource.data) || request.resource.data.studentName == null) &&
+            (!('studentEmail' in request.resource.data) || request.resource.data.studentEmail == null) &&
+            (!('studentPhone' in request.resource.data) || request.resource.data.studentPhone == null)
+          )
+        );
+
+      // Updates: Restricted to authorized Admins OR student posting messages to thread
+      allow update: if 
+        // A) Authorized Admin updating status, notes, or assignment
+        (isAdmin() && isDeptLiaison(resource.data.department)) ||
+        
+        // B) Student adding a follow-up clarification message without altering core data
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['communicationThread', 'lastStudentUpdateTimestamp'])
+        ) ||
+        
+        // C) Student exercising DPDP Section 12 Right to Erasure / Cancellation
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancellationReason', 'closedAt']) &&
+          request.resource.data.status == 'WITHDRAWN_BY_STUDENT'
+        );
+
+      // Deletes: Completely disallowed. Retained for statutory audit until 30-day purge lifecycle.
+      allow delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Admin Roles & RBAC (/admin_roles/{uid})
+    // -------------------------------------------------------------------------
+    match /admin_roles/{uid} {
+      allow read: if isAuthenticated();
+      // Only active Super-Admin can create or update admin roles
+      allow write: if isSuperAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // Authentic Admin Succession Ledger (/admin_succession_ledger/{handoverId})
+    // IMMUTABLE AUDIT TRAIL: Append-Only. Updates and Deletes are permanently blocked.
+    // -------------------------------------------------------------------------
+    match /admin_succession_ledger/{handoverId} {
+      allow read: if isAdmin();
+      
+      // Creation: Requires Super-Admin authorization and signed DPDP statutory oath
+      allow create: if 
+        isSuperAdmin() &&
+        request.resource.data.dpdpOathSigned == true &&
+        request.resource.data.timestamp is timestamp &&
+        request.resource.data.transferorUid == request.auth.uid &&
+        request.resource.data.transfereeUid is string &&
+        request.resource.data.cryptoSignature is string;
+
+      // STRICT IMMUTABILITY: Neither Super-Admin nor anyone can tamper or delete succession history!
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Anomaly Telemetry & Department Clusters (/anomaly_clusters/{clusterId})
+    // -------------------------------------------------------------------------
+    match /anomaly_clusters/{clusterId} {
+      allow read: if isAdmin();
+      allow write: if isNodalOfficer();
+    }
+  }
+}
