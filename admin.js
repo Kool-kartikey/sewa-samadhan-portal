@@ -1233,52 +1233,52 @@ function renderAdminCockpit(root, session) {
         </div>
 
         <!-- Desktop View Table -->
-        <div class="hidden md:block overflow-x-auto">
+        <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-800">
           <table class="civic-table w-full text-left text-xs">
-            <thead class="bg-slate-950/80 text-slate-300 border-b border-slate-800">
+            <thead class="bg-slate-950/90 text-slate-300 border-b border-slate-800">
               <tr>
-                <th class="py-3 px-4 font-black">Token</th>
-                <th class="py-3 px-4 font-black">Category</th>
-                <th class="py-3 px-4 font-black">Department</th>
-                <th class="py-3 px-4 font-black">Complainant</th>
-                <th class="py-3 px-4 font-black">Urgency</th>
-                <th class="py-3 px-4 font-black">Status</th>
-                <th class="py-3 px-4 font-black text-right">Action</th>
+                <th class="py-3.5 px-4 font-black whitespace-nowrap min-w-[170px]">Tracking Token</th>
+                <th class="py-3.5 px-4 font-black whitespace-nowrap min-w-[190px]">Category</th>
+                <th class="py-3.5 px-4 font-black whitespace-nowrap min-w-[240px]">Department</th>
+                <th class="py-3.5 px-4 font-black whitespace-nowrap min-w-[170px]">Complainant</th>
+                <th class="py-3.5 px-4 font-black whitespace-nowrap min-w-[120px]">Urgency</th>
+                <th class="py-3.5 px-4 font-black whitespace-nowrap min-w-[160px]">Status</th>
+                <th class="py-3.5 px-4 font-black whitespace-nowrap text-right min-w-[140px]">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800">
               ${filtered.length > 0 ? filtered.map(g => `
                 <tr class="hover:bg-slate-800/50 transition">
-                  <td class="py-3 px-4 font-mono font-black text-amber-400">
+                  <td class="py-3.5 px-4 font-mono font-black text-amber-400 whitespace-nowrap">
                     ${g.trackToken}
                   </td>
-                  <td class="py-3 px-4 font-bold text-slate-200">
+                  <td class="py-3.5 px-4 font-bold text-slate-200">
                     ${CATEGORIES[g.category]?.icon || '📋'} ${CATEGORIES[g.category]?.label || g.category}
                   </td>
-                  <td class="py-3 px-4 text-slate-300">
+                  <td class="py-3.5 px-4 text-slate-300 leading-snug">
                     ${g.department}
                   </td>
-                  <td class="py-3 px-4">
+                  <td class="py-3.5 px-4 whitespace-nowrap">
                     ${g.isAnonymous ? `
                       <span class="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
                         🛡️ ANONYMOUS
                       </span>
                     ` : `
-                      <span class="font-bold text-slate-200">${g.studentName || 'Student'}</span>
+                      <span class="font-bold text-slate-200">${escapeHtml(g.studentName || 'Student')}</span>
                     `}
                   </td>
-                  <td class="py-3 px-4">
-                    <span class="text-[10px] font-black px-2 py-0.5 rounded ${g.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50' : 'bg-slate-800 text-slate-300 border border-slate-700'}">
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    <span class="text-[10px] font-black px-2.5 py-1 rounded ${g.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50' : 'bg-slate-800 text-slate-300 border border-slate-700'}">
                       ${g.severity}
                     </span>
                   </td>
-                  <td class="py-3 px-4">
+                  <td class="py-3.5 px-4 whitespace-nowrap">
                     <span class="badge badge-${(LIFECYCLE_STAGES.find(s => s.key === g.status)?.color) || 'submitted'} text-[10px] font-black">
                       ${LIFECYCLE_STAGES.find(s => s.key === g.status)?.label || g.status}
                     </span>
                   </td>
-                  <td class="py-3 px-4 text-right">
-                    <button onclick="inspectTicket('${g.ticketId}')" class="px-3 py-1 text-xs font-black rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 transition">
+                  <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                    <button onclick="inspectTicket('${g.ticketId}')" class="px-3 py-1.5 text-xs font-black rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 transition">
                       Inspect & Redress ➔
                     </button>
                   </td>
