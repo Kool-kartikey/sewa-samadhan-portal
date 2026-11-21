@@ -19,11 +19,11 @@
 ## 2. Technical Credits and Contributors
 
 * Kartikey Tiwari (Lead System Architect)
-  Vice-President, UDSC Students' Union (M.Sc. Informatics, Institute of Informatics and Communication, University of Delhi South Campus)
+  Vice-President, SDC Students' Union 2026/27 (M.Sc. Informatics, 1st Semester, Institute of Informatics and Communication, University of Delhi South Campus)
   Designed core full-stack portal architecture, DPDP Act 2023 statutory consent workflows, cryptographic tracking tokens, and Google Sheets bidirectional sync engine.
 
 * Shraddha Choudhary (Ollama API Integration and Local NLP Pipeline)
-  M.Sc. Informatics, 1st Semester, Institute of Informatics and Communication (IIC), University of Delhi South Campus
+ Central Councilor, SDC Students' Union 2026/27 (M.Sc. Informatics, 1st Semester, Institute of Informatics and Communication (IIC), University of Delhi South Campus)
   Engineered the Ollama API integration into this site. Implemented local model connectivity through Ollama endpoints (/api/generate and /v1/chat/completions) to handle automated grievance categorization, priority scoring, and natural language summary generation directly on local infrastructure. This local pipeline prevents student testimonies and personal details from leaving the campus network, satisfying DPDP Act 2023 data minimization requirements.
 
 * UDSC Students' Union Executive Committee (2026/27)
