@@ -51,8 +51,29 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("🏛️ SAMADHAN Portal")
     .addItem("✨ Format Cells for Comfortable Viewing", "formatSheetForComfortableViewing")
+    .addItem("🔒 Enforce Read-Only Sheet Protection", "lockSheetReadOnly")
     .addItem("🔄 Reset Header Styles", "setupHeaders")
     .addToUi();
+}
+
+/**
+ * Enforces Read-Only Protection on the Spreadsheet
+ * Prevents unauthorized or accidental cell modification.
+ */
+function lockSheetReadOnly() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var protections = sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET);
+  for (var i = 0; i < protections.length; i++) {
+    protections[i].remove();
+  }
+  var p = sheet.protect().setDescription('S.A.M.A.D.H.A.N Immutable Public Transparency Ledger — Protected');
+  p.removeEditors(p.getEditors());
+  if (p.canDomainEdit()) {
+    p.setDomainEdit(false);
+  }
+  try {
+    SpreadsheetApp.getActiveSpreadsheet().toast('Sheet is now locked and protected in read-only mode!', '🔒 Protection Enforced', 5);
+  } catch (e) {}
 }
 
 /**
@@ -142,6 +163,11 @@ function formatSheetLayout(sheet) {
       }
     }
   }
+
+  // 5. Automatically enforce sheet protection in read-only mode
+  try {
+    lockSheetReadOnly();
+  } catch (e) {}
 }
 
 /**

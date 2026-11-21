@@ -12,7 +12,7 @@
 
 * Student Grievance Portal and Public Telemetry: https://udsc-samadhan-portal.web.app
 * Executive Admin Cockpit: https://udsc-samadhan-portal.web.app/admin
-* Public Transparency Ledger: https://docs.google.com/spreadsheets/d/1bNGdmCG4k3tGBnZ4f5CmW_6V45KWI_XNVMNct_B22jM/edit?usp=sharing
+* Public Transparency Ledger: https://docs.google.com/spreadsheets/d/1bNGdmCG4k3tGBnZ4f5CmW_6V45KWI_XNVMNct_B22jM/preview
 
 ---
 
