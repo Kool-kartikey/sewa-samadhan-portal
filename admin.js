@@ -46,8 +46,30 @@ function getTrustCubeSvg(className = "w-full h-full") {
 }
 
 // ============================================================================
-// 2. CONSTANTS, CATEGORIES & LIFECYCLE STAGES
+// 2. CONSTANTS, EXECUTIVE REGISTRY, CATEGORIES & LIFECYCLE STAGES
 // ============================================================================
+
+const PRIMARY_ARCHITECT_EMAIL = 'kartikeyatiwari03@gmail.com';
+const PRESIDENT_EMAIL = 'rawalsingh9800@gmail.com';
+
+const CORE_EXECUTIVE_REGISTRY = Object.freeze({
+  'kartikeyatiwari03@gmail.com': {
+    email: 'kartikeyatiwari03@gmail.com',
+    name: 'Kartikey Tiwari',
+    designation: "Vice-President, South Delhi Campus Students' Union 2026/27 & Lead System Architect",
+    badgeLabel: 'Vice-President • Lead System Architect',
+    roleTier: 'ARCHITECT',
+    isProtectedRoot: true
+  },
+  'rawalsingh9800@gmail.com': {
+    email: 'rawalsingh9800@gmail.com',
+    name: 'Rawal Singh',
+    designation: "President, South Delhi Campus Students' Union 2026/27",
+    badgeLabel: 'President • Students\' Union',
+    roleTier: 'EXECUTIVE',
+    isProtectedRoot: false
+  }
+});
 
 const CATEGORIES = {
   ACADEMIC: { id: 'ACADEMIC', icon: '🎓', label: 'Academic & Examinations' },
@@ -68,7 +90,7 @@ const LIFECYCLE_STAGES = [
   { key: 'RESOLVED', label: 'Resolved & Closed', color: 'resolved' }
 ];
 
-// Master Passcode Storage Key (Initialized dynamically by authenticated Google Administrator)
+// Master Passcode Storage Key Prefix (Initialized privately per workstation)
 const PASSCODE_HASH_STORAGE_KEY = 'samadhan_master_passcode_hash_v5';
 
 // Dedicated SAMADHAN Firebase Configuration (Isolated Project: udsc-samadhan-2026)
@@ -285,6 +307,18 @@ function parseGrievanceRow(row) {
     });
   }
 
+  // Parse optional Column 15 (Official Union Action Notes) synced from Apps Script
+  const rawActionNotes = (row[14] || '').trim();
+  if (rawActionNotes) {
+    rawActionNotes.split(/\r?\n/).filter(Boolean).forEach(line => {
+      timeline.push({
+        stage: status,
+        timestamp: submittedAt,
+        note: line.trim()
+      });
+    });
+  }
+
   return {
     ticketId,
     trackToken: token,
@@ -354,37 +388,61 @@ class AdminRepository {
   }
 
   init() {
-    // 1. Initialize Active Union Bearer
+    // 1. Initialize Active Union Bearer (Default Primary Architect Profile)
+    const primaryProfile = CORE_EXECUTIVE_REGISTRY[PRIMARY_ARCHITECT_EMAIL];
     if (!localStorage.getItem(this.adminRoleKey)) {
       localStorage.setItem(this.adminRoleKey, JSON.stringify({
         id: 'VICE_PRESIDENT',
-        name: 'Kartikey Tiwari',
-        email: 'kartikeyatiwari03@gmail.com',
-        designation: 'Vice-President, UDSC Students\' Union'
+        name: primaryProfile.name,
+        email: primaryProfile.email,
+        designation: primaryProfile.designation
       }));
     }
 
-    // 2. Initialize Authorized Admin Whitelist strictly with primary admin
-    if (!localStorage.getItem(this.whitelistKey)) {
-      localStorage.setItem(this.whitelistKey, JSON.stringify([
-        'kartikeyatiwari03@gmail.com'
-      ]));
-    }
+    // 2. Ensure core executives (Architect + Union President) are persisted in authorized whitelist
+    const existingList = this.getWhitelistedEmails();
+    localStorage.setItem(this.whitelistKey, JSON.stringify(existingList));
 
-    // 3. Master Passcode Hash (Configured by authorized administrator)
-    // Zero hardcoded default passwords are seeded into client storage.
+    // 3. Per-executive workstation passkeys are initialized privately after Google verification.
+    // Zero hardcoded passwords or hashes exist in source code.
+  }
+
+  // --- Executive Profile & Role Authority ---
+  getExecutiveProfile(email) {
+    const normalized = (email || '').trim().toLowerCase();
+    if (CORE_EXECUTIVE_REGISTRY[normalized]) {
+      return CORE_EXECUTIVE_REGISTRY[normalized];
+    }
+    return {
+      email: normalized,
+      name: 'Union Executive',
+      designation: "Executive Member, South Delhi Campus Students' Union 2026/27",
+      badgeLabel: 'Union Executive',
+      roleTier: 'EXECUTIVE',
+      isProtectedRoot: false
+    };
+  }
+
+  isArchitect(email) {
+    return (email || '').trim().toLowerCase() === PRIMARY_ARCHITECT_EMAIL;
   }
 
   // --- Whitelist Management (RBAC) ---
   getWhitelistedEmails() {
+    const coreEmails = Object.keys(CORE_EXECUTIVE_REGISTRY);
     try {
       const list = JSON.parse(localStorage.getItem(this.whitelistKey));
-      if (Array.isArray(list) && list.length > 0) {
-        return list.map(e => e.trim().toLowerCase());
+      const merged = new Set(coreEmails);
+      if (Array.isArray(list)) {
+        list.forEach(e => {
+          if (typeof e === 'string' && e.trim().includes('@')) {
+            merged.add(e.trim().toLowerCase());
+          }
+        });
       }
-      return ['kartikeyatiwari03@gmail.com'];
+      return Array.from(merged);
     } catch {
-      return ['kartikeyatiwari03@gmail.com'];
+      return [...coreEmails];
     }
   }
 
@@ -395,24 +453,33 @@ class AdminRepository {
     return list.includes(normalized);
   }
 
-  addWhitelistedEmail(email) {
+  addWhitelistedEmail(email, actorEmail = PRIMARY_ARCHITECT_EMAIL) {
+    if (actorEmail && !this.isArchitect(actorEmail)) {
+      return { success: false, message: 'Access Denied: Only the Lead System Architect can authorize new accounts.' };
+    }
     const normalized = email.trim().toLowerCase();
     if (!normalized || !normalized.includes('@')) {
       return { success: false, message: 'Please provide a valid institutional email address.' };
     }
     const list = this.getWhitelistedEmails();
     if (list.includes(normalized)) {
-      return { success: false, message: 'This email is already on the authorized admin whitelist.' };
+      return { success: false, message: 'This email is already on the authorized executive list.' };
     }
     list.push(normalized);
     localStorage.setItem(this.whitelistKey, JSON.stringify(list));
     return { success: true, message: `Successfully authorized: ${normalized}` };
   }
 
-  removeWhitelistedEmail(email) {
+  removeWhitelistedEmail(email, actorEmail = PRIMARY_ARCHITECT_EMAIL) {
     const normalized = email.trim().toLowerCase();
-    if (normalized === 'kartikeyatiwari03@gmail.com') {
+    if (normalized === PRIMARY_ARCHITECT_EMAIL) {
       return { success: false, message: 'Primary Administrator (kartikeyatiwari03@gmail.com) is permanently protected and cannot be removed.' };
+    }
+    if (actorEmail && !this.isArchitect(actorEmail)) {
+      return { success: false, message: 'Access Denied: Account revocation is restricted to the Lead System Architect.' };
+    }
+    if (normalized === PRESIDENT_EMAIL) {
+      return { success: false, message: 'Core Union President entry cannot be purged from local registry.' };
     }
     let list = this.getWhitelistedEmails();
     list = list.filter(e => e !== normalized);
@@ -450,33 +517,50 @@ class AdminRepository {
     localStorage.removeItem(this.lockoutKey);
   }
 
-  // --- Master Passcode Verification & Update ---
-  getMasterPasscodeHash() {
-    return localStorage.getItem(this.passcodeHashKey) || null;
+  // --- Per-Account Workstation Passcode Verification & Update ---
+  getPasscodeStorageKey(email) {
+    const norm = (email || '').trim().toLowerCase();
+    return norm ? `${this.passcodeHashKey}_${norm}` : this.passcodeHashKey;
   }
 
-  async verifyPasscode(candidatePassword) {
+  getMasterPasscodeHash(email) {
+    const sessionEmail = email || this.getSession()?.email;
+    const perUser = sessionEmail ? localStorage.getItem(this.getPasscodeStorageKey(sessionEmail)) : null;
+    if (perUser) return perUser;
+    if (!sessionEmail || sessionEmail === PRIMARY_ARCHITECT_EMAIL) {
+      return localStorage.getItem(this.passcodeHashKey) || null;
+    }
+    return null;
+  }
+
+  async verifyPasscode(candidatePassword, email) {
     if (!candidatePassword) return false;
-    const storedHash = this.getMasterPasscodeHash();
+    const storedHash = this.getMasterPasscodeHash(email);
     if (!storedHash) return false;
     const candidateHash = await sha256Hex(candidatePassword);
     return candidateHash === storedHash;
   }
 
-  async updateMasterPasscode(currentPassword, newPassword) {
-    const storedHash = this.getMasterPasscodeHash();
+  async updateMasterPasscode(currentPassword, newPassword, email) {
+    const targetEmail = (email || this.getSession()?.email || '').trim().toLowerCase();
+    const storedHash = this.getMasterPasscodeHash(targetEmail);
     if (storedHash) {
-      const isValid = await this.verifyPasscode(currentPassword);
+      const isValid = await this.verifyPasscode(currentPassword, targetEmail);
       if (!isValid) {
-        return { success: false, message: 'Current Master Passcode is incorrect.' };
+        return { success: false, message: 'Current workstation passkey is incorrect.' };
       }
     }
     if (!newPassword || newPassword.length < 8) {
-      return { success: false, message: 'New Passcode must be at least 8 characters long.' };
+      return { success: false, message: 'New passkey must be at least 8 characters long.' };
     }
     const newHash = await sha256Hex(newPassword);
-    localStorage.setItem(this.passcodeHashKey, newHash);
-    return { success: true, message: storedHash ? 'Master Passcode successfully updated!' : 'Master Passcode successfully configured!' };
+    localStorage.setItem(this.getPasscodeStorageKey(targetEmail), newHash);
+    return {
+      success: true,
+      message: storedHash
+        ? 'Workstation passkey updated for this browser.'
+        : 'Workstation passkey configured for quick sign-in on this browser.'
+    };
   }
 
   // --- Session Management (1-Hour Inactivity Timeout) ---
@@ -496,13 +580,17 @@ class AdminRepository {
 
   setSession(email, extra = {}) {
     const normalized = email.trim().toLowerCase();
+    const profile = this.getExecutiveProfile(normalized);
     const now = Date.now();
     const session = {
       email: normalized,
       token: generateSecureToken(16),
       loggedInAt: new Date(now).toISOString(),
       expiresAt: now + (60 * 60 * 1000), // 1 hour session lifetime
-      name: normalized === 'kartikeyatiwari03@gmail.com' ? 'Kartikey Tiwari' : (extra.displayName || 'Union Executive'),
+      name: profile.name !== 'Union Executive' ? profile.name : (extra.displayName || 'Union Executive'),
+      designation: profile.designation,
+      badgeLabel: profile.badgeLabel,
+      roleTier: profile.roleTier,
       provider: extra.provider || 'password_passkey',
       photoURL: extra.photoURL || null
     };
@@ -513,6 +601,50 @@ class AdminRepository {
 
   clearSession() {
     localStorage.removeItem(this.sessionKey);
+  }
+
+  // --- Authenticated Live Google Sheet Update Dispatch ---
+  async getVerifiedFirebaseIdToken() {
+    const auth = getFirebaseAuth();
+    if (!auth || !auth.currentUser) return null;
+    try {
+      return await auth.currentUser.getIdToken();
+    } catch (e) {
+      console.warn('Could not fetch Firebase ID Token:', e);
+      return null;
+    }
+  }
+
+  async syncCaseUpdateToGoogleSheet(payloadData) {
+    const webhookUrl = getGoogleSheetWebhookUrl();
+    if (!webhookUrl || typeof fetch === 'undefined') {
+      return { synced: false, reason: 'no_webhook' };
+    }
+    const idToken = await this.getVerifiedFirebaseIdToken();
+    if (!idToken) {
+      return { synced: false, reason: 'no_firebase_token' };
+    }
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          ...payloadData,
+          idToken
+        })
+      });
+      const result = await response.json().catch(() => null);
+      if (result && result.status === 'success') {
+        return { synced: true, message: result.message };
+      }
+      if (result && result.status === 'error') {
+        return { synced: false, reason: 'backend_rejected', message: result.message };
+      }
+      return { synced: response.ok, reason: response.ok ? 'ok' : 'http_error' };
+    } catch (err) {
+      console.warn('Google Sheet update dispatch error:', err);
+      return { synced: false, reason: 'network_error', message: err.message };
+    }
   }
 
   // --- Grievance & Succession Operations ---
@@ -573,9 +705,9 @@ class AdminRepository {
       for (const remote of remoteGrievances) {
         const existing = localMap.get(remote.trackToken.toUpperCase()) || (remote.ticketId && localMap.get(remote.ticketId.toUpperCase()));
         if (existing) {
-          // If admin has locally moved status or added notes, preserve the local admin status and timeline
-          const localHasAdvancedStatus = existing.status && existing.status !== 'SUBMITTED' && remote.status === 'SUBMITTED';
-          const finalStatus = localHasAdvancedStatus ? existing.status : (remote.status || existing.status);
+          const keepLocalStatus = Boolean(existing.pendingSheetSync && existing.status !== remote.status);
+          const finalStatus = keepLocalStatus ? existing.status : (remote.status || existing.status);
+          const pendingStill = Boolean(existing.pendingSheetSync && remote.status !== existing.status);
           const finalTimeline = (existing.timeline && existing.timeline.length > (remote.timeline ? remote.timeline.length : 1))
             ? existing.timeline
             : (remote.timeline || existing.timeline);
@@ -584,6 +716,7 @@ class AdminRepository {
             ...remote,
             ...existing,
             status: finalStatus,
+            pendingSheetSync: pendingStill,
             timeline: finalTimeline
           });
           localMap.delete(remote.trackToken.toUpperCase());
@@ -622,19 +755,20 @@ class AdminRepository {
   }
 
   getActiveAdmin() {
+    const primaryProfile = CORE_EXECUTIVE_REGISTRY[PRIMARY_ARCHITECT_EMAIL];
     try {
       return JSON.parse(localStorage.getItem(this.adminRoleKey)) || {
         id: 'VICE_PRESIDENT',
-        name: 'Kartikey Tiwari',
-        email: 'kartikeyatiwari03@gmail.com',
-        designation: 'Vice-President, UDSC Students\' Union'
+        name: primaryProfile.name,
+        email: primaryProfile.email,
+        designation: primaryProfile.designation
       };
     } catch {
       return {
         id: 'VICE_PRESIDENT',
-        name: 'Kartikey Tiwari',
-        email: 'kartikeyatiwari03@gmail.com',
-        designation: 'Vice-President, UDSC Students\' Union'
+        name: primaryProfile.name,
+        email: primaryProfile.email,
+        designation: primaryProfile.designation
       };
     }
   }
@@ -660,6 +794,8 @@ const adminState = {
   isWhitelistModalOpen: false,
   isPasscodeModalOpen: false,
   isSheetModalOpen: false,
+  guideDismissed: localStorage.getItem('samadhan_admin_guide_dismissed') === '1',
+  syncBanner: null, // { type: 'success' | 'warning' | 'info', message: string }
   authLoading: false,
   authError: null,
   authSuccess: null,
@@ -760,7 +896,7 @@ function renderAdminSignIn(root) {
               <div class="flex items-center gap-1.5 font-black text-rose-400">
                 <span>⛔ ACCESS DENIED</span>
               </div>
-              <p class="leading-relaxed">${adminState.authError}</p>
+              <p class="leading-relaxed">${escapeHtml(adminState.authError)}</p>
             </div>
           ` : ''}
 
@@ -769,7 +905,7 @@ function renderAdminSignIn(root) {
               <div class="flex items-center gap-1.5 font-black text-emerald-400">
                 <span>✓ IDENTITY VERIFIED</span>
               </div>
-              <p class="leading-relaxed">${adminState.authSuccess}</p>
+              <p class="leading-relaxed">${escapeHtml(adminState.authSuccess)}</p>
             </div>
           ` : ''}
         </div>
@@ -801,16 +937,16 @@ function renderAdminSignIn(root) {
         <div class="relative flex items-center justify-center my-2">
           <div class="border-t border-slate-700 w-full"></div>
           <span class="bg-slate-900 px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest absolute">
-            OR USE EXECUTIVE PASSKEY
+            OR SIGN IN WITH EMAIL &amp; PASSKEY
           </span>
         </div>
 
-        <!-- Method 2: Authorized Email + Cryptographic Master Passcode -->
+        <!-- Method 2: Authorized Email + Password / Workstation Passkey -->
         <form onsubmit="handleAdminPasscodeSignIn(event)" class="space-y-4">
           <div>
             <label class="form-label text-slate-200 font-bold text-xs flex items-center justify-between">
               <span>Authorized Executive Email</span>
-              <span class="text-[10px] text-amber-400 font-normal">Must be whitelisted</span>
+              <span class="text-[10px] text-amber-400 font-normal">President &amp; Union Desk</span>
             </label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
@@ -821,7 +957,7 @@ function renderAdminSignIn(root) {
                 id="adminEmailInput" 
                 required
                 autocomplete="email"
-                placeholder="Enter authorized institutional email"
+                placeholder="Enter authorized Union email"
                 value=""
                 class="form-input text-xs pl-8 bg-slate-950 border-slate-700 text-white font-mono focus:border-amber-400 w-full"
               />
@@ -830,7 +966,7 @@ function renderAdminSignIn(root) {
 
           <div>
             <label class="form-label text-slate-200 font-bold text-xs flex items-center justify-between">
-              <span>Executive Security Passcode</span>
+              <span>Account Password or Device Passkey</span>
               <button type="button" onclick="togglePasswordVisibility()" class="text-[10px] text-slate-400 hover:text-amber-400">
                 ${adminState.showPassword ? 'Hide 🙈' : 'Show 👁️'}
               </button>
@@ -844,7 +980,7 @@ function renderAdminSignIn(root) {
                 id="adminPasscodeInput" 
                 required
                 autocomplete="current-password"
-                placeholder="Enter Executive Security Passcode"
+                placeholder="Enter password or configured device passkey"
                 value=""
                 class="form-input text-xs pl-8 bg-slate-950 border-slate-700 text-white font-mono focus:border-amber-400 w-full"
               />
@@ -856,8 +992,12 @@ function renderAdminSignIn(root) {
             ${lockout.isLocked || adminState.authLoading ? 'disabled' : ''}
             class="w-full py-3 text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white border-2 border-amber-400/50 rounded-xl shadow-lg transition active:scale-98"
           >
-            Verify Passkey & Enter Cockpit ➔
+            Sign In to Executive Cockpit ➔
           </button>
+
+          <p class="text-[11px] text-slate-400 leading-relaxed bg-slate-950/70 border border-slate-800 rounded-xl p-2.5">
+            💡 <strong class="text-slate-200">First-time setup:</strong> Click <em>Sign In with Verified Google Account</em> above with your authorized Gmail. You can also configure a quick local device passkey from <strong>Security Key</strong> once signed in.
+          </p>
         </form>
 
         <!-- Statutory DPDP & Governance Trust Footnote -->
@@ -942,8 +1082,14 @@ function renderAdminCockpit(root, session) {
     }
   });
 
-  // Calculate session remaining time
+  // Calculate session remaining time & role-scoped UI permissions
   const sessionRemainingMin = Math.max(0, Math.ceil((session.expiresAt - Date.now()) / 60000));
+  const isArchitect = adminRepo.isArchitect(session.email);
+  const sessionProfile = adminRepo.getExecutiveProfile(session.email);
+  const displayName = sessionProfile.name !== 'Union Executive' ? sessionProfile.name : (session.name || activeAdmin.name);
+  const displayDesignation = sessionProfile.designation || activeAdmin.designation;
+  const authInstance = getFirebaseAuth();
+  const hasLiveFirebaseUser = Boolean(authInstance && authInstance.currentUser && (authInstance.currentUser.email || '').toLowerCase() === session.email);
 
   root.innerHTML = `
     <!-- Top Executive Command Header -->
@@ -968,50 +1114,50 @@ function renderAdminCockpit(root, session) {
           </div>
         </div>
 
-        <!-- Right: Action Toolbar -->
+        <!-- Right: Clean Role-Scoped Action Toolbar -->
         <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap">
           
-          <!-- Active Admin Identity Pill -->
+          <!-- Active Executive Identity Pill -->
           <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 border-2 border-slate-700 text-xs">
-            <span class="text-amber-400 font-bold">👤 ${session.name}</span>
+            <span class="text-amber-400 font-bold">👤 ${escapeHtml(displayName)}</span>
             <span class="text-[10px] text-emerald-400 font-mono font-bold">(${sessionRemainingMin}m left)</span>
           </div>
 
-          <!-- Security Settings (Change Passcode) -->
-          <button onclick="openPasscodeModal()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border-2 border-amber-500/50 flex items-center gap-1.5 transition shadow-sm">
+          <!-- Workstation Security Key -->
+          <button onclick="openPasscodeModal()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border-2 border-amber-500/50 flex items-center gap-1.5 transition shadow-sm" title="Configure quick sign-in passkey for this browser">
             🔑 <span>Security Key</span>
           </button>
 
           <!-- Live Sync with Google Sheet Button -->
-          <button onclick="handleManualSheetSync()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-400 flex items-center gap-1.5 transition shadow-md hover:scale-102" title="Sync live submissions from Google Spreadsheet">
+          <button onclick="handleManualSheetSync(event)" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-400 flex items-center gap-1.5 transition shadow-md hover:scale-102" title="Fetch latest grievance submissions from Google Sheet">
             <span class="inline-block w-2 h-2 rounded-full bg-white animate-pulse"></span>
-            <span>🔄 Live Sync (${total} Active)</span>
+            <span>🔄 Live Sync (${total})</span>
           </button>
 
           <!-- Public View-Only Google Sheet Ledger -->
-          <a href="${getGoogleSheetViewUrl()}" target="_blank" rel="noopener noreferrer" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-2 border-emerald-500/50 flex items-center gap-1.5 transition shadow-sm">
-            📊 <span>Public Sheet (View-Only)</span>
+          <a href="${getGoogleSheetViewUrl()}" target="_blank" rel="noopener noreferrer" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-2 border-emerald-500/50 flex items-center gap-1.5 transition shadow-sm" title="Open public read-only transparency spreadsheet">
+            📊 <span>Public Sheet</span>
           </a>
 
-          <!-- Configure Sheet Sync Button -->
-          <button onclick="openSheetModal()" class="text-xs font-black px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 transition shadow-sm" title="Configure Google Sheet Link / Webhook">
-            ⚙️ <span>Sheet Sync</span>
-          </button>
-
-          <!-- Manage Whitelist Button -->
-          <button onclick="openWhitelistModal()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border-2 border-slate-700 flex items-center gap-1.5 transition shadow-sm">
-            👥 <span>RBAC Admins (${whitelistedEmails.length})</span>
-          </button>
-
-          <!-- Export Data -->
-          <button onclick="exportGrievancesCSV()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border-2 border-slate-700 flex items-center gap-1.5 transition shadow-sm">
+          <!-- Export CSV -->
+          <button onclick="exportGrievancesCSV()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border-2 border-slate-700 flex items-center gap-1.5 transition shadow-sm" title="Download complaints register as CSV">
             📥 <span>Export CSV</span>
           </button>
 
-          <!-- Authentic Succession Trigger -->
-          <button onclick="openSuccessionModal()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white border-2 border-amber-400/50 shadow-md transition">
+          ${isArchitect ? `
+          <!-- System Architect Only: Sheet Webhook Config, Access Control & Succession -->
+          <button onclick="openSheetModal()" class="text-xs font-black px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 transition shadow-sm" title="Configure Google Sheet & Apps Script Webhook URLs">
+            ⚙️ <span>Sheet Sync</span>
+          </button>
+
+          <button onclick="openWhitelistModal()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border-2 border-slate-700 flex items-center gap-1.5 transition shadow-sm" title="Manage authorized executive accounts">
+            👥 <span>Access (${whitelistedEmails.length})</span>
+          </button>
+
+          <button onclick="openSuccessionModal()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white border-2 border-amber-400/50 shadow-md transition" title="Execute formal executive handover protocol">
             🤝 <span>Handover</span>
           </button>
+          ` : ''}
 
           <!-- Public Student Portal Link -->
           <a href="/index.html" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-2 border-slate-700 flex items-center gap-1 transition shadow-sm">
@@ -1038,26 +1184,62 @@ function renderAdminCockpit(root, session) {
           </div>
           <div>
             <div class="flex items-center gap-2 flex-wrap">
-              <h2 class="text-lg font-black text-white">${activeAdmin.name}</h2>
+              <h2 class="text-lg font-black text-white">${escapeHtml(displayName)}</h2>
               <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                ${activeAdmin.designation}
+                ${escapeHtml(displayDesignation)}
               </span>
             </div>
             <p class="text-xs text-slate-300 mt-1">
-              Official Email: <strong class="text-amber-400 font-mono">${activeAdmin.email}</strong> • UDSC Central Students' Amenities Block
+              Signed in as <strong class="text-amber-400 font-mono">${escapeHtml(session.email)}</strong> • South Delhi Campus Grievance Cell
             </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-3 text-xs font-bold text-slate-300 flex-wrap">
-          <span class="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700">
-            Database: <code class="text-amber-400 font-mono">samadhan</code> (Isolated Production)
+        <div class="flex items-center gap-2.5 text-xs font-bold text-slate-300 flex-wrap">
+          <span class="px-2.5 py-1 rounded-lg ${hasLiveFirebaseUser ? 'bg-emerald-950/70 border border-emerald-500/50 text-emerald-300' : 'bg-amber-950/60 border border-amber-500/40 text-amber-300'}" title="${hasLiveFirebaseUser ? 'Verified Google session active — status changes sync directly to Public Sheet' : 'Local passkey session active — re-sign via Google to push live sheet status updates'}">
+            ${hasLiveFirebaseUser ? '✓ Live Sheet Sync Ready' : '⚡ Local Session (Sign in with Google for Live Updates)'}
           </span>
           <span class="px-2.5 py-1 rounded-lg bg-emerald-950/70 border border-emerald-500/50 text-emerald-300">
             ✓ DPDP Act 2023 Compliant
           </span>
         </div>
       </div>
+
+      ${adminState.syncBanner ? `
+        <div class="p-3.5 rounded-xl border-2 text-xs flex items-center justify-between gap-3 ${adminState.syncBanner.type === 'success' ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200' : (adminState.syncBanner.type === 'warning' ? 'bg-amber-950/80 border-amber-500 text-amber-200' : 'bg-slate-900 border-slate-700 text-slate-200')}">
+          <span>${escapeHtml(adminState.syncBanner.message)}</span>
+          <button onclick="dismissSyncBanner()" class="font-bold px-2 py-0.5 rounded hover:bg-white/10">✕</button>
+        </div>
+      ` : ''}
+
+      ${!adminState.guideDismissed ? `
+        <!-- Quick Executive Workflow Guide -->
+        <div class="civic-card p-4 bg-slate-900/90 border border-amber-500/40 shadow-md">
+          <div class="flex items-start justify-between gap-3">
+            <div class="space-y-2 w-full">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-black uppercase tracking-wider text-amber-400">Executive Quick Guide</span>
+                <span class="text-[11px] text-slate-400">How grievance review and status updates work</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                  <strong class="text-white block">1. Filter or Search Cases</strong>
+                  <span class="text-slate-400">Use priority tabs or search by token (e.g. UDSC-2026-HOSTEL-421), department, or title.</span>
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                  <strong class="text-white block">2. Inspect Complaint Details</strong>
+                  <span class="text-slate-400">Click <em>Inspect &amp; Update</em> to read the testimony and SLA target. Anonymous IDs stay protected.</span>
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                  <strong class="text-white block">3. Update Status &amp; Add Note</strong>
+                  <span class="text-slate-400">Select the new lifecycle stage and record a short action note. Updates publish to the live tracker.</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="dismissAdminGuide()" class="text-slate-400 hover:text-white text-xs font-bold px-2 py-1 rounded hover:bg-slate-800" title="Hide guide">Hide ✕</button>
+          </div>
+        </div>
+      ` : ''}
 
       <!-- Command Overview KPI Metric Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -1201,15 +1383,15 @@ function renderAdminCockpit(root, session) {
             ${dynamicClusters.map(c => `
               <div class="p-3.5 bg-slate-950 border-2 border-slate-700 rounded-xl space-y-1.5 hover:border-amber-400 transition shadow-sm">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs font-black text-amber-400">${c.department}</span>
+                  <span class="text-xs font-black text-amber-400">${escapeHtml(c.department)}</span>
                   <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono">
                     ${c.count} Complaints
                   </span>
                 </div>
                 <p class="text-xs text-slate-300 leading-snug">
-                  ${c.description}
+                  ${escapeHtml(c.description)}
                 </p>
-                <button onclick="handleAdminSearch('${c.department}')" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 hover:underline pt-1 flex items-center gap-1">
+                <button data-dept="${escapeHtml(c.department)}" onclick="handleAdminSearch(this.dataset.dept)" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 hover:underline pt-1 flex items-center gap-1">
                   Filter Cases for this Department ➔
                 </button>
               </div>
@@ -1250,13 +1432,13 @@ function renderAdminCockpit(root, session) {
               ${filtered.length > 0 ? filtered.map(g => `
                 <tr class="hover:bg-slate-800/50 transition">
                   <td class="py-3.5 px-4 font-mono font-black text-amber-400 whitespace-nowrap">
-                    ${g.trackToken}
+                    ${escapeHtml(g.trackToken)}
                   </td>
                   <td class="py-3.5 px-4 font-bold text-slate-200">
-                    ${CATEGORIES[g.category]?.icon || '📋'} ${CATEGORIES[g.category]?.label || g.category}
+                    ${CATEGORIES[g.category]?.icon || '📋'} ${escapeHtml(CATEGORIES[g.category]?.label || g.category)}
                   </td>
                   <td class="py-3.5 px-4 text-slate-300 leading-snug">
-                    ${g.department}
+                    ${escapeHtml(g.department)}
                   </td>
                   <td class="py-3.5 px-4 whitespace-nowrap">
                     ${g.isAnonymous ? `
@@ -1269,17 +1451,17 @@ function renderAdminCockpit(root, session) {
                   </td>
                   <td class="py-3.5 px-4 whitespace-nowrap">
                     <span class="text-[10px] font-black px-2.5 py-1 rounded ${g.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50' : 'bg-slate-800 text-slate-300 border border-slate-700'}">
-                      ${g.severity}
+                      ${escapeHtml(g.severity)}
                     </span>
                   </td>
                   <td class="py-3.5 px-4 whitespace-nowrap">
                     <span class="badge badge-${(LIFECYCLE_STAGES.find(s => s.key === g.status)?.color) || 'submitted'} text-[10px] font-black">
-                      ${LIFECYCLE_STAGES.find(s => s.key === g.status)?.label || g.status}
+                      ${escapeHtml(LIFECYCLE_STAGES.find(s => s.key === g.status)?.label || g.status)}
                     </span>
                   </td>
                   <td class="py-3.5 px-4 text-right whitespace-nowrap">
-                    <button onclick="inspectTicket('${g.ticketId}')" class="px-3 py-1.5 text-xs font-black rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 transition">
-                      Inspect & Redress ➔
+                    <button onclick="inspectTicket('${escapeHtml(g.ticketId)}')" class="px-3 py-1.5 text-xs font-black rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 transition">
+                      Inspect &amp; Update ➔
                     </button>
                   </td>
                 </tr>
@@ -1301,14 +1483,14 @@ function renderAdminCockpit(root, session) {
           ${filtered.length > 0 ? filtered.map(g => `
             <div class="p-4 space-y-2.5 hover:bg-slate-800/40 transition">
               <div class="flex items-center justify-between">
-                <span class="font-mono font-black text-amber-400 text-xs">${g.trackToken}</span>
+                <span class="font-mono font-black text-amber-400 text-xs">${escapeHtml(g.trackToken)}</span>
                 <span class="badge badge-${(LIFECYCLE_STAGES.find(s => s.key === g.status)?.color) || 'submitted'} text-[10px] font-black">
-                  ${LIFECYCLE_STAGES.find(s => s.key === g.status)?.label || g.status}
+                  ${escapeHtml(LIFECYCLE_STAGES.find(s => s.key === g.status)?.label || g.status)}
                 </span>
               </div>
-              <h4 class="font-black text-sm text-white">${g.title}</h4>
+              <h4 class="font-black text-sm text-white">${escapeHtml(g.title)}</h4>
               <p class="text-xs text-slate-300">
-                <strong>Dept:</strong> ${g.department}
+                <strong>Dept:</strong> ${escapeHtml(g.department)}
               </p>
               <div class="flex items-center justify-between text-xs pt-1">
                 <div>
@@ -1317,11 +1499,11 @@ function renderAdminCockpit(root, session) {
                       🛡️ ANONYMOUS
                     </span>
                   ` : `
-                    <span class="text-slate-300 font-bold">${g.studentName || 'Student'}</span>
+                    <span class="text-slate-300 font-bold">${escapeHtml(g.studentName || 'Student')}</span>
                   `}
                 </div>
-                <button onclick="inspectTicket('${g.ticketId}')" class="px-3 py-1 text-xs font-black rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 transition">
-                  Inspect ➔
+                <button onclick="inspectTicket('${escapeHtml(g.ticketId)}')" class="px-3 py-1 text-xs font-black rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 transition">
+                  Inspect &amp; Update ➔
                 </button>
               </div>
             </div>
@@ -1340,10 +1522,10 @@ function renderAdminCockpit(root, session) {
     <!-- Modals Container -->
     <div id="adminModalContainer">
       ${adminState.selectedTicket ? renderTicketInspectionModal(adminState.selectedTicket) : ''}
-      ${adminState.isWhitelistModalOpen ? renderWhitelistManagementModal(whitelistedEmails) : ''}
-      ${adminState.isPasscodeModalOpen ? renderPasscodeSettingsModal() : ''}
-      ${adminState.isSheetModalOpen ? renderSheetConfigModal() : ''}
-      ${adminState.activeHandshake ? renderSuccessionHandshakeModal(adminState.activeHandshake) : ''}
+      ${isArchitect && adminState.isWhitelistModalOpen ? renderWhitelistManagementModal(whitelistedEmails) : ''}
+      ${adminState.isPasscodeModalOpen ? renderPasscodeSettingsModal(session.email) : ''}
+      ${isArchitect && adminState.isSheetModalOpen ? renderSheetConfigModal() : ''}
+      ${isArchitect && adminState.activeHandshake ? renderSuccessionHandshakeModal(adminState.activeHandshake) : ''}
     </div>
   `;
 }
@@ -1362,91 +1544,110 @@ function renderTicketInspectionModal(ticketId) {
         
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
-            <div class="flex items-center gap-2">
-              <span class="font-mono font-black text-amber-400 text-sm">${g.trackToken}</span>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-mono font-black text-amber-400 text-sm">${escapeHtml(g.trackToken)}</span>
               <span class="badge badge-${(LIFECYCLE_STAGES.find(s => s.key === g.status)?.color) || 'submitted'} text-[10px]">
-                ${LIFECYCLE_STAGES.find(s => s.key === g.status)?.label || g.status}
+                ${escapeHtml(LIFECYCLE_STAGES.find(s => s.key === g.status)?.label || g.status)}
               </span>
+              ${g.pendingSheetSync ? `
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  Saving to Ledger...
+                </span>
+              ` : ''}
             </div>
-            <h3 class="text-lg font-black text-white mt-1">${g.title}</h3>
+            <h3 class="text-lg font-black text-white mt-1">${escapeHtml(g.title)}</h3>
           </div>
-          <button onclick="closeInspectionModal()" class="text-slate-400 hover:text-white text-xl font-bold p-1">
+          <button onclick="closeInspectionModal()" class="text-slate-400 hover:text-white text-xl font-bold p-1" aria-label="Close drawer">
             ✕
           </button>
         </div>
 
         <!-- Case Details Grid -->
-        <div class="grid grid-cols-2 gap-3 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
           <div>
             <span class="text-slate-400 block font-bold">Category</span>
-            <span class="text-white font-bold">${CATEGORIES[g.category]?.icon || ''} ${CATEGORIES[g.category]?.label || g.category}</span>
+            <span class="text-white font-bold">${CATEGORIES[g.category]?.icon || ''} ${escapeHtml(CATEGORIES[g.category]?.label || g.category)}</span>
           </div>
           <div>
             <span class="text-slate-400 block font-bold">Department</span>
-            <span class="text-white font-bold">${g.department}</span>
+            <span class="text-white font-bold">${escapeHtml(g.department)}</span>
           </div>
           <div>
-            <span class="text-slate-400 block font-bold">Complainant Status</span>
-            <span class="text-white font-bold">${g.isAnonymous ? '🛡️ Anonymous (Whistleblower Shield)' : (g.studentName || 'Student')}</span>
+            <span class="text-slate-400 block font-bold">Complainant Identity</span>
+            <span class="text-white font-bold">${g.isAnonymous ? '🛡️ Anonymous (Whistleblower Protected)' : escapeHtml(g.studentName || 'Student')}</span>
+            ${!g.isAnonymous && (g.studentEmail || g.studentPhone) ? `
+              <span class="block text-[11px] text-slate-400 font-mono mt-0.5">
+                ${escapeHtml([g.studentEmail, g.studentPhone].filter(v => v && v !== 'N/A').join(' • '))}
+              </span>
+            ` : ''}
           </div>
           <div>
-            <span class="text-slate-400 block font-bold">SLA Priority Target</span>
-            <span class="text-rose-400 font-mono font-bold">${formatSafeDateTime(g.slaDeadline)}</span>
+            <span class="text-slate-400 block font-bold">SLA Target</span>
+            <span class="text-rose-400 font-mono font-bold">${escapeHtml(formatSafeDateTime(g.slaDeadline))}</span>
           </div>
         </div>
 
         <!-- Detailed Description -->
         <div>
-          <label class="form-label text-slate-300 font-bold text-xs">Official Grievance Testimony</label>
-          <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">
-            ${g.description}
-          </div>
+          <label class="form-label text-slate-300 font-bold text-xs">Submitted Grievance Testimony</label>
+          <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">${escapeHtml(g.description)}</div>
         </div>
 
         <!-- Milestone Status Advance Form -->
-        <div class="p-4 bg-slate-950 border-2 border-slate-800 rounded-xl space-y-3">
-          <label class="form-label text-amber-400 font-black text-xs uppercase tracking-wider">
-            Advance Case Lifecycle Milestone
-          </label>
+        <div class="p-4 bg-slate-950 border-2 border-slate-800 rounded-xl space-y-2.5">
+          <div>
+            <label class="form-label text-amber-400 font-black text-xs uppercase tracking-wider mb-0.5 block">
+              Update Grievance Status
+            </label>
+            <p class="text-[11px] text-slate-400">
+              Select the current stage. Updates publish live to the Public Transparency Sheet and Student Tracker.
+            </p>
+          </div>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
             ${LIFECYCLE_STAGES.map(s => `
               <button 
-                onclick="updateTicketMilestone('${g.ticketId}', '${s.key}')" 
+                type="button"
+                onclick="updateTicketMilestone('${escapeHtml(g.ticketId)}', '${s.key}')" 
                 class="px-2.5 py-2 text-xs font-bold rounded-lg border-2 transition ${g.status === s.key ? 'bg-amber-500 text-black border-amber-400 font-black shadow-sm' : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500'}"
               >
-                ${s.label}
+                ${escapeHtml(s.label)}
               </button>
             `).join('')}
           </div>
         </div>
 
         <!-- Add Official Action Note -->
-        <div class="space-y-2">
-          <label class="form-label text-slate-300 font-bold text-xs">Add Official Union Action Note</label>
+        <form onsubmit="addTicketActionNote(event, '${escapeHtml(g.ticketId)}')" class="space-y-2">
+          <div>
+            <label class="form-label text-slate-300 font-bold text-xs mb-0.5 block">Add Official Union Action Note</label>
+            <p class="text-[11px] text-slate-400">Record steps taken (visible on student tracking timeline; avoid sensitive personal data).</p>
+          </div>
           <div class="flex gap-2">
             <input 
               type="text" 
               id="actionNoteInput" 
-              placeholder="e.g. Discussed with Department Head; scheduled joint site visit..." 
+              required
+              maxlength="400"
+              placeholder="e.g. Discussed with Department Head; follow-up scheduled for tomorrow..." 
               class="form-input text-xs bg-slate-950 border-slate-700 text-white flex-1"
             />
-            <button onclick="addTicketActionNote('${g.ticketId}')" class="btn btn-primary text-xs font-black">
-              Record Note ➔
+            <button type="submit" class="btn btn-primary text-xs font-black whitespace-nowrap">
+              Save Note ➔
             </button>
           </div>
-        </div>
+        </form>
 
         <!-- Audit Timeline -->
         <div>
-          <label class="form-label text-slate-300 font-bold text-xs">Official Case Timeline & Redressal Audit</label>
+          <label class="form-label text-slate-300 font-bold text-xs">Case Timeline &amp; Action Log</label>
           <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
-            ${g.timeline.map(t => `
+            ${(g.timeline || []).map(t => `
               <div class="p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-xs space-y-0.5">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-amber-400">${t.stage}</span>
+                  <span class="font-bold text-amber-400">${escapeHtml(t.stage)}</span>
                   <span class="text-[10px] text-slate-500 font-mono">${new Date(t.timestamp).toLocaleString('en-IN')}</span>
                 </div>
-                <p class="text-slate-300 text-[11px]">${t.note}</p>
+                <p class="text-slate-300 text-[11px]">${escapeHtml(t.note)}</p>
               </div>
             `).join('')}
           </div>
@@ -1454,7 +1655,7 @@ function renderTicketInspectionModal(ticketId) {
 
         <div class="flex justify-end pt-2 border-t border-slate-800">
           <button onclick="closeInspectionModal()" class="btn btn-secondary text-xs">
-            Close Inspection Drawer
+            Close Drawer
           </button>
         </div>
 
@@ -1463,8 +1664,8 @@ function renderTicketInspectionModal(ticketId) {
   `;
 }
 
-function renderPasscodeSettingsModal() {
-  const hasExisting = Boolean(adminRepo.getMasterPasscodeHash());
+function renderPasscodeSettingsModal(email) {
+  const hasExisting = Boolean(adminRepo.getMasterPasscodeHash(email));
   return `
     <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div class="bg-slate-900 border-2 border-amber-500 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl text-left">
@@ -1473,8 +1674,8 @@ function renderPasscodeSettingsModal() {
           <div class="flex items-center gap-2">
             <span class="text-2xl">🔑</span>
             <div>
-              <h3 class="text-base font-black text-white">Security & Passcode Settings</h3>
-              <p class="text-xs text-slate-400">${hasExisting ? 'Update Union Executive Master Passkey' : 'Configure Initial Executive Master Passkey'}</p>
+              <h3 class="text-base font-black text-white">Device Security Key</h3>
+              <p class="text-xs text-slate-400">${hasExisting ? 'Update passkey for ' + escapeHtml(email) : 'Set a quick passkey for this browser'}</p>
             </div>
           </div>
           <button onclick="closePasscodeModal()" class="text-slate-400 hover:text-white text-xl font-bold">✕</button>
@@ -1483,39 +1684,41 @@ function renderPasscodeSettingsModal() {
         <form onsubmit="handlePasscodeChange(event)" class="space-y-3.5">
           ${hasExisting ? `
           <div>
-            <label class="form-label text-slate-200 font-bold text-xs">Current Master Passcode</label>
+            <label class="form-label text-slate-200 font-bold text-xs">Current Device Passkey</label>
             <input 
               type="password" 
               id="currentPassInput" 
               required
-              placeholder="Enter current master passcode" 
+              placeholder="Enter current passkey" 
               class="form-input text-xs bg-slate-950 border-slate-700 text-white w-full"
             />
           </div>
           ` : `
           <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-200 text-xs">
-            ℹ️ Setting up your private Executive Passcode for this workstation. This enables direct passcode login without re-authenticating with Google.
+            ℹ️ Configure a private passkey stored locally on this browser so you can unlock the cockpit quickly alongside Google Sign-In.
           </div>
           `}
 
           <div>
-            <label class="form-label text-slate-200 font-bold text-xs">New Master Passcode</label>
+            <label class="form-label text-slate-200 font-bold text-xs">New Passkey</label>
             <input 
               type="password" 
               id="newPassInput" 
               required
+              minlength="8"
               placeholder="Minimum 8 characters" 
               class="form-input text-xs bg-slate-950 border-slate-700 text-white w-full"
             />
           </div>
 
           <div>
-            <label class="form-label text-slate-200 font-bold text-xs">Confirm New Passcode</label>
+            <label class="form-label text-slate-200 font-bold text-xs">Confirm New Passkey</label>
             <input 
               type="password" 
               id="confirmPassInput" 
               required
-              placeholder="Re-enter new passcode" 
+              minlength="8"
+              placeholder="Re-enter new passkey" 
               class="form-input text-xs bg-slate-950 border-slate-700 text-white w-full"
             />
           </div>
@@ -1525,7 +1728,7 @@ function renderPasscodeSettingsModal() {
               Cancel
             </button>
             <button type="submit" class="btn btn-primary text-xs font-black">
-              ${hasExisting ? 'Update Master Passkey ➔' : 'Save Master Passkey ➔'}
+              ${hasExisting ? 'Update Passkey ➔' : 'Save Passkey ➔'}
             </button>
           </div>
         </form>
@@ -1544,8 +1747,8 @@ function renderWhitelistManagementModal(whitelistedEmails) {
           <div class="flex items-center gap-2">
             <span class="text-2xl">👥</span>
             <div>
-              <h3 class="text-base font-black text-white">Authorized Admin Whitelist (RBAC)</h3>
-              <p class="text-xs text-slate-400">Role-Based Access Control for UDSC Students' Union Cockpit</p>
+              <h3 class="text-base font-black text-white">Executive Access Control (RBAC)</h3>
+              <p class="text-xs text-slate-400">Authorized Students' Union accounts for UDSC Cockpit</p>
             </div>
           </div>
           <button onclick="closeWhitelistModal()" class="text-slate-400 hover:text-white text-xl font-bold">✕</button>
@@ -1553,13 +1756,13 @@ function renderWhitelistManagementModal(whitelistedEmails) {
 
         <!-- Add Email Form -->
         <form onsubmit="handleAddWhitelistEmail(event)" class="space-y-2">
-          <label class="form-label text-slate-200 font-bold text-xs">Authorize New Union Executive</label>
+          <label class="form-label text-slate-200 font-bold text-xs">Authorize Additional Executive Email</label>
           <div class="flex gap-2">
             <input 
               type="email" 
               id="newWhitelistEmailInput" 
               required
-              placeholder="e.g. rawal.singh@south.du.ac.in" 
+              placeholder="e.g. executive@south.du.ac.in" 
               class="form-input text-xs bg-slate-950 border-slate-700 text-white flex-1"
             />
             <button type="submit" class="btn btn-primary text-xs font-black">
@@ -1570,26 +1773,34 @@ function renderWhitelistManagementModal(whitelistedEmails) {
 
         <!-- Current Whitelisted List -->
         <div>
-          <label class="form-label text-slate-300 font-bold text-xs">Currently Authorized Administrators</label>
+          <label class="form-label text-slate-300 font-bold text-xs">Currently Authorized Accounts</label>
           <div class="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden max-h-56 overflow-y-auto">
-            ${whitelistedEmails.map(email => `
-              <div class="p-3 bg-slate-950 flex items-center justify-between text-xs">
+            ${whitelistedEmails.map(email => {
+              const profile = adminRepo.getExecutiveProfile(email);
+              const isRoot = email === PRIMARY_ARCHITECT_EMAIL;
+              const isPresident = email === PRESIDENT_EMAIL;
+              return `
+              <div class="p-3 bg-slate-950 flex items-center justify-between gap-2 text-xs">
                 <div>
-                  <span class="font-mono text-white font-bold">${email}</span>
-                  ${email === 'kartikeyatiwari03@gmail.com' ? `
+                  <span class="font-mono text-white font-bold">${escapeHtml(email)}</span>
+                  ${isRoot ? `
                     <span class="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-bold">
-                      PRIMARY ADMIN (PERMANENT)
+                      VICE-PRESIDENT • ARCHITECT
+                    </span>
+                  ` : isPresident ? `
+                    <span class="ml-2 px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-bold">
+                      PRESIDENT • EXECUTIVE
                     </span>
                   ` : `
                     <span class="ml-2 px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[9px]">
-                      DELEGATED ADMIN
+                      UNION EXECUTIVE
                     </span>
                   `}
                 </div>
                 <div>
-                  ${email !== 'kartikeyatiwari03@gmail.com' ? `
+                  ${!isRoot && !isPresident ? `
                     <button 
-                      onclick="handleRemoveWhitelistEmail('${email}')" 
+                      onclick="handleRemoveWhitelistEmail('${escapeHtml(email)}')" 
                       class="text-xs font-bold text-rose-400 hover:text-rose-300 hover:underline px-2 py-1"
                     >
                       Revoke ✕
@@ -1599,7 +1810,8 @@ function renderWhitelistManagementModal(whitelistedEmails) {
                   `}
                 </div>
               </div>
-            `).join('')}
+              `;
+            }).join('')}
           </div>
         </div>
 
@@ -1814,7 +2026,7 @@ window.handleGoogleSignIn = async function() {
   }
 };
 
-// Method 2: Email + Master Passkey Sign-In
+// Method 2: Email + Firebase Password or Workstation Passkey Sign-In
 window.handleAdminPasscodeSignIn = async function(e) {
   if (e) e.preventDefault();
   
@@ -1837,7 +2049,7 @@ window.handleAdminPasscodeSignIn = async function(e) {
   }
 
   if (!password) {
-    adminState.authError = 'Please enter your Executive Security Passcode.';
+    adminState.authError = 'Please enter your account password or device passkey.';
     renderAdminApp();
     return;
   }
@@ -1845,36 +2057,61 @@ window.handleAdminPasscodeSignIn = async function(e) {
   // 1. Verify Whitelist
   if (!adminRepo.isEmailWhitelisted(email)) {
     adminRepo.recordFailedAttempt();
-    adminState.authError = `Access Denied: "${email}" is not on the authorized Union Executive whitelist.`;
+    adminState.authError = `Access Denied: "${escapeHtml(email)}" is not on the authorized Union Executive roster.`;
     renderAdminApp();
     return;
   }
 
-  // 2. Check if Master Passcode is initialized on this workstation
-  const storedHash = adminRepo.getMasterPasscodeHash();
-  if (!storedHash) {
-    adminState.authError = 'Executive Security Passcode is uninitialized on this device. Please authenticate via Google Identity first.';
-    renderAdminApp();
-    return;
-  }
+  adminState.authLoading = true;
+  adminState.authError = null;
+  renderAdminApp();
 
-  // 3. Cryptographically Verify Passcode
-  const isMatch = await adminRepo.verifyPasscode(password);
-  if (!isMatch) {
-    const res = adminRepo.recordFailedAttempt();
-    if (res.lockoutUntil > 0) {
-      adminState.authError = `Access Denied: Invalid Passcode. 3 consecutive failed attempts: Security Lockout active for 5 minutes!`;
-    } else {
-      adminState.authError = `Access Denied: Invalid Executive Security Passcode. Attempt ${res.attempts} of 3.`;
+  // 2A. Try real Firebase Email/Password authentication first (gives live Google JWT across any device)
+  let authenticatedProvider = null;
+  const auth = getFirebaseAuth();
+  if (auth) {
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      authenticatedProvider = 'firebase_password';
+    } catch (_) {
+      // Fall through cleanly to workstation SHA-256 passkey verification
     }
-    renderAdminApp();
-    return;
+  }
+
+  // 2B. Fallback to per-email workstation passkey hash stored in local browser
+  if (!authenticatedProvider) {
+    const storedHash = adminRepo.getMasterPasscodeHash(email);
+    if (!storedHash) {
+      adminState.authLoading = false;
+      adminState.authError = 'No password or device passkey is active on this browser for this email. Click "Sign In with Verified Google Account" above to sign in with Google.';
+      renderAdminApp();
+      return;
+    }
+
+    const isMatch = await adminRepo.verifyPasscode(password, email);
+    if (!isMatch) {
+      adminState.authLoading = false;
+      const res = adminRepo.recordFailedAttempt();
+      if (res.lockoutUntil > 0) {
+        adminState.authError = 'Access Denied: 3 consecutive failed attempts. Security Lockout active for 5 minutes.';
+      } else {
+        adminState.authError = `Access Denied: Incorrect password or device passkey. Attempt ${res.attempts} of 3.`;
+      }
+      renderAdminApp();
+      return;
+    }
+    authenticatedProvider = 'device_passkey';
   }
 
   // Success: Set authenticated session
+  const profile = adminRepo.getExecutiveProfile(email);
+  adminState.authLoading = false;
   adminState.authError = null;
-  adminState.authSuccess = `Passcode Verified: Access granted for ${email}.`;
-  adminRepo.setSession(email);
+  adminState.authSuccess = `Access Verified: Welcome, ${profile.name}.`;
+  adminRepo.setSession(email, {
+    provider: authenticatedProvider,
+    displayName: profile.name
+  });
 
   // Synchronize live sheet
   adminRepo.syncFromGoogleSheet().then(() => renderAdminApp());
@@ -1890,6 +2127,17 @@ window.togglePasswordVisibility = function() {
   renderAdminApp();
 };
 
+window.dismissAdminGuide = function() {
+  adminState.guideDismissed = true;
+  localStorage.setItem('samadhan_admin_guide_dismissed', '1');
+  renderAdminApp();
+};
+
+window.dismissSyncBanner = function() {
+  adminState.syncBanner = null;
+  renderAdminApp();
+};
+
 window.handleAdminSignOut = function() {
   adminRepo.clearSession();
   const auth = getFirebaseAuth();
@@ -1898,6 +2146,7 @@ window.handleAdminSignOut = function() {
   }
   adminState.authError = null;
   adminState.authSuccess = null;
+  adminState.syncBanner = null;
   renderAdminApp();
 };
 
@@ -1931,36 +2180,133 @@ window.closeInspectionModal = function() {
   renderAdminApp();
 };
 
-window.updateTicketMilestone = function(ticketId, newStage) {
-  adminRepo.update(ticketId, g => {
+window.updateTicketMilestone = async function(ticketId, newStage) {
+  const session = adminRepo.getSession();
+  if (!session) return;
+  const profile = adminRepo.getExecutiveProfile(session.email);
+  const stageObj = LIFECYCLE_STAGES.find(s => s.key === newStage);
+  const stageLabel = stageObj ? stageObj.label : newStage;
+  const noteText = `Status updated to ${stageLabel} by ${profile.name}.`;
+
+  const updated = adminRepo.update(ticketId, g => {
     g.status = newStage;
+    g.pendingSheetSync = true;
+    g.localModifiedAt = Date.now();
+    g.timeline = g.timeline || [];
     g.timeline.push({
       stage: newStage,
-      timestamp: new Date().toISOString(),
-      note: `Status advanced to ${newStage} by Union Executive.`
-    });
-    return g;
-  });
-  renderAdminApp();
-};
-
-window.addTicketActionNote = function(ticketId) {
-  const input = document.getElementById('actionNoteInput');
-  const noteText = input ? input.value.trim() : '';
-  if (!noteText) return;
-
-  adminRepo.update(ticketId, g => {
-    g.timeline.push({
-      stage: g.status,
       timestamp: new Date().toISOString(),
       note: noteText
     });
     return g;
   });
+
+  adminState.syncBanner = {
+    type: 'info',
+    message: `Updating ${updated ? updated.trackToken : ticketId} status to ${stageLabel} on Public Transparency Ledger...`
+  };
   renderAdminApp();
+
+  if (updated) {
+    const syncRes = await adminRepo.syncCaseUpdateToGoogleSheet({
+      action: 'updateStatus',
+      trackToken: updated.trackToken,
+      status: newStage,
+      note: noteText,
+      actorName: profile.name,
+      actorEmail: session.email
+    });
+
+    if (syncRes.synced) {
+      adminRepo.update(ticketId, g => {
+        g.pendingSheetSync = false;
+        return g;
+      });
+      adminState.syncBanner = {
+        type: 'success',
+        message: `✓ ${updated.trackToken} updated to ${stageLabel} and synced live to the Google Sheet & Student Tracker.`
+      };
+    } else if (syncRes.reason === 'no_firebase_token') {
+      adminState.syncBanner = {
+        type: 'warning',
+        message: `Saved locally for ${updated.trackToken}. To publish updates globally for students, sign in using Google Identity.`
+      };
+    } else {
+      adminState.syncBanner = {
+        type: 'warning',
+        message: `Saved locally for ${updated.trackToken}. Sheet sync pending (${syncRes.message || syncRes.reason || 're-deploy Apps Script to enable write sync'}).`
+      };
+    }
+    renderAdminApp();
+  }
+};
+
+window.addTicketActionNote = async function(eventOrId, maybeTicketId) {
+  if (eventOrId && typeof eventOrId === 'object' && eventOrId.preventDefault) {
+    eventOrId.preventDefault();
+  }
+  const ticketId = typeof eventOrId === 'string' ? eventOrId : maybeTicketId;
+  const session = adminRepo.getSession();
+  if (!session) return;
+
+  const input = document.getElementById('actionNoteInput');
+  const noteText = input ? input.value.trim() : '';
+  if (!noteText) return;
+
+  const profile = adminRepo.getExecutiveProfile(session.email);
+  const formattedNote = `[${profile.name}] ${noteText}`;
+
+  const updated = adminRepo.update(ticketId, g => {
+    g.pendingSheetSync = true;
+    g.localModifiedAt = Date.now();
+    g.timeline = g.timeline || [];
+    g.timeline.push({
+      stage: g.status,
+      timestamp: new Date().toISOString(),
+      note: formattedNote
+    });
+    return g;
+  });
+
+  if (input) input.value = '';
+  adminState.syncBanner = {
+    type: 'info',
+    message: `Saving action note for ${updated ? updated.trackToken : ticketId}...`
+  };
+  renderAdminApp();
+
+  if (updated) {
+    const syncRes = await adminRepo.syncCaseUpdateToGoogleSheet({
+      action: 'addNote',
+      trackToken: updated.trackToken,
+      status: updated.status,
+      note: formattedNote,
+      actorName: profile.name,
+      actorEmail: session.email
+    });
+
+    if (syncRes.synced) {
+      adminRepo.update(ticketId, g => {
+        g.pendingSheetSync = false;
+        return g;
+      });
+      adminState.syncBanner = {
+        type: 'success',
+        message: `✓ Action note for ${updated.trackToken} saved and synced live to the Google Sheet.`
+      };
+    } else {
+      adminState.syncBanner = {
+        type: 'warning',
+        message: `Note saved locally for ${updated.trackToken} (${syncRes.message || syncRes.reason || 'sign in via Google to sync live'}).`
+      };
+    }
+    renderAdminApp();
+  }
 };
 
 window.openSheetModal = function() {
+  const session = adminRepo.getSession();
+  if (!session || !adminRepo.isArchitect(session.email)) return;
   adminState.isSheetModalOpen = true;
   renderAdminApp();
 };
@@ -1972,6 +2318,8 @@ window.closeSheetModal = function() {
 
 window.handleSaveSheetConfig = function(e) {
   if (e) e.preventDefault();
+  const session = adminRepo.getSession();
+  if (!session || !adminRepo.isArchitect(session.email)) return;
   const viewUrl = document.getElementById('sheetViewUrlInput')?.value;
   const webhookUrl = document.getElementById('sheetWebhookUrlInput')?.value;
   setGoogleSheetConfig(viewUrl, webhookUrl);
@@ -1981,16 +2329,19 @@ window.handleSaveSheetConfig = function(e) {
   renderAdminApp();
 };
 
-window.handleManualSheetSync = async function() {
-  const btn = event?.currentTarget;
+window.handleManualSheetSync = async function(e) {
+  const btn = e?.currentTarget;
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) btn.innerHTML = '⏳ Syncing...';
   try {
     const list = await adminRepo.syncFromGoogleSheet();
+    adminState.syncBanner = {
+      type: 'success',
+      message: `✓ Synced ${list.length} campus grievances from the live Google Sheet.`
+    };
     renderAdminApp();
-    alert(`✓ Successfully synced ${list.length} live campus grievances from Google Sheet!`);
-  } catch (e) {
-    alert('Sync error: ' + e.message);
+  } catch (err) {
+    alert('Sync error: ' + err.message);
   } finally {
     if (btn && origHtml) btn.innerHTML = origHtml;
   }
@@ -2008,22 +2359,24 @@ window.closePasscodeModal = function() {
 
 window.handlePasscodeChange = async function(e) {
   if (e) e.preventDefault();
-  const hasExisting = Boolean(adminRepo.getMasterPasscodeHash());
+  const session = adminRepo.getSession();
+  const targetEmail = session ? session.email : '';
+  const hasExisting = Boolean(adminRepo.getMasterPasscodeHash(targetEmail));
   const currentPass = hasExisting ? document.getElementById('currentPassInput')?.value : '';
   const newPass = document.getElementById('newPassInput')?.value;
   const confirmPass = document.getElementById('confirmPassInput')?.value;
 
   if (hasExisting && !currentPass) {
-    alert("Please enter your current master passcode.");
+    alert("Please enter your current device passkey.");
     return;
   }
 
   if (newPass !== confirmPass) {
-    alert("New Passcode and Confirm Passcode do not match.");
+    alert("New Passkey and Confirm Passkey do not match.");
     return;
   }
 
-  const result = await adminRepo.updateMasterPasscode(currentPass, newPass);
+  const result = await adminRepo.updateMasterPasscode(currentPass, newPass, targetEmail);
   alert(result.message);
   if (result.success) {
     adminState.isPasscodeModalOpen = false;
@@ -2032,6 +2385,8 @@ window.handlePasscodeChange = async function(e) {
 };
 
 window.openWhitelistModal = function() {
+  const session = adminRepo.getSession();
+  if (!session || !adminRepo.isArchitect(session.email)) return;
   adminState.isWhitelistModalOpen = true;
   renderAdminApp();
 };
@@ -2043,23 +2398,29 @@ window.closeWhitelistModal = function() {
 
 window.handleAddWhitelistEmail = function(e) {
   if (e) e.preventDefault();
+  const session = adminRepo.getSession();
+  if (!session || !adminRepo.isArchitect(session.email)) return;
   const input = document.getElementById('newWhitelistEmailInput');
   const email = input ? input.value.trim() : '';
-  const result = adminRepo.addWhitelistedEmail(email);
+  const result = adminRepo.addWhitelistedEmail(email, session.email);
   alert(result.message);
   renderAdminApp();
 };
 
 window.handleRemoveWhitelistEmail = function(email) {
+  const session = adminRepo.getSession();
+  if (!session || !adminRepo.isArchitect(session.email)) return;
   const confirmed = confirm(`Are you sure you want to revoke administrative access for ${email}?`);
   if (confirmed) {
-    const result = adminRepo.removeWhitelistedEmail(email);
+    const result = adminRepo.removeWhitelistedEmail(email, session.email);
     alert(result.message);
     renderAdminApp();
   }
 };
 
 window.openSuccessionModal = function() {
+  const session = adminRepo.getSession();
+  if (!session || !adminRepo.isArchitect(session.email)) return;
   adminState.activeHandshake = {
     token: 'SUCC-2026-' + generateSecureToken(8),
     createdAt: new Date().toISOString()
@@ -2074,6 +2435,8 @@ window.closeSuccessionModal = function() {
 
 window.handleSuccessionExecution = async function(e) {
   if (e) e.preventDefault();
+  const session = adminRepo.getSession();
+  if (!session || !adminRepo.isArchitect(session.email)) return;
   const name = document.getElementById('succNameInput')?.value.trim();
   const email = document.getElementById('succEmailInput')?.value.trim().toLowerCase();
   const desig = document.getElementById('succDesigInput')?.value.trim();
@@ -2101,12 +2464,20 @@ window.handleSuccessionExecution = async function(e) {
     email,
     designation: desig
   });
-  adminRepo.addWhitelistedEmail(email);
+  adminRepo.addWhitelistedEmail(email, session.email);
 
   alert(`✓ Dual-Custody Succession Complete!\n\nSHA-256 Certificate: ${certHash.substring(0, 24)}...\nAdministrative responsibility transferred to ${name}.`);
   adminState.activeHandshake = null;
   renderAdminApp();
 };
+
+function sanitizeCsvField(val) {
+  let s = String(val === null || val === undefined ? '' : val);
+  if (/^[=\+\-\@\t\r]/.test(s)) {
+    s = "'" + s;
+  }
+  return `"${s.replace(/"/g, '""')}"`;
+}
 
 window.exportGrievancesCSV = function() {
   const all = adminRepo.getAll();
@@ -2117,16 +2488,16 @@ window.exportGrievancesCSV = function() {
 
   const headers = ["Ticket ID", "Token", "Category", "Department", "Urgency", "Status", "Complainant", "Submitted At", "SLA Deadline", "Title"];
   const rows = all.map(g => [
-    g.ticketId,
-    g.trackToken,
-    g.category,
-    `"${(g.department || '').replace(/"/g, '""')}"`,
-    g.severity,
-    g.status,
-    g.isAnonymous ? "ANONYMOUS" : `"${(g.studentName || '').replace(/"/g, '""')}"`,
-    g.submittedAt,
-    g.slaDeadline,
-    `"${(g.title || '').replace(/"/g, '""')}"`
+    sanitizeCsvField(g.ticketId),
+    sanitizeCsvField(g.trackToken),
+    sanitizeCsvField(g.category),
+    sanitizeCsvField(g.department || ''),
+    sanitizeCsvField(g.severity),
+    sanitizeCsvField(g.status),
+    sanitizeCsvField(g.isAnonymous ? "ANONYMOUS" : (g.studentName || 'Student')),
+    sanitizeCsvField(g.submittedAt),
+    sanitizeCsvField(g.slaDeadline),
+    sanitizeCsvField(g.title || '')
   ]);
 
   const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");

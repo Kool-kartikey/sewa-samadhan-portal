@@ -547,6 +547,18 @@ function parseGrievanceRow(row) {
     });
   }
 
+  // Parse optional Column 15 (Official Union Action Notes) published from Admin Cockpit
+  const rawActionNotes = (row[14] || '').trim();
+  if (rawActionNotes) {
+    rawActionNotes.split(/\r?\n/).filter(Boolean).forEach(line => {
+      timeline.push({
+        stage: status,
+        timestamp: submittedAt,
+        note: line.trim()
+      });
+    });
+  }
+
   return {
     ticketId,
     trackToken: token,
@@ -1494,16 +1506,16 @@ function renderTicketDetails(g) {
       <!-- Case Meta Header -->
       <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-800">
         <div>
-          <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">${g.trackToken}</span>
-          <h3 class="text-lg font-black mt-0.5">${g.title}</h3>
+          <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">${escapeHtml(g.trackToken)}</span>
+          <h3 class="text-lg font-black mt-0.5">${escapeHtml(g.title)}</h3>
           <p class="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-            ${t('tracker_dept')}: <strong>${getDepartmentName(g.department)}</strong>
+            ${t('tracker_dept')}: <strong>${escapeHtml(getDepartmentName(g.department))}</strong>
           </p>
         </div>
 
         <div class="flex flex-col items-end gap-1">
           <span class="badge badge-${LIFECYCLE_STAGES.find(s => s.key === g.status)?.color || 'submitted'} text-xs">
-            ${getStageLabel(g.status)}
+            ${escapeHtml(getStageLabel(g.status))}
           </span>
           <span class="text-[11px] text-slate-500 dark:text-zinc-400">
             ${t('tracker_sla')}: <strong class="text-amber-600 dark:text-amber-400">${new Date(g.slaDeadline).toLocaleDateString('en-IN')}</strong>
@@ -1530,7 +1542,7 @@ function renderTicketDetails(g) {
                   ${historyItem ? `<span class="text-[10px] text-slate-400 font-mono">${new Date(historyItem.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>` : ''}
                 </div>
                 <p class="text-xs text-slate-500 dark:text-zinc-400">
-                  ${historyItem ? historyItem.note : (isCurrent ? 'Under active review by the UDSC Students\' Union redressing panel.' : 'Pending progression.')}
+                  ${historyItem ? escapeHtml(historyItem.note) : (isCurrent ? 'Under active review by the UDSC Students\' Union redressing panel.' : 'Pending progression.')}
                 </p>
               </div>
             </div>
@@ -1542,8 +1554,8 @@ function renderTicketDetails(g) {
       <div class="p-4 rounded-xl civic-well space-y-2">
         <h4 class="text-xs font-black uppercase text-amber-700 dark:text-amber-400 tracking-wider">${t('tracker_official_log')}</h4>
         <p class="text-xs">
-          ${g.assignedOfficer ? `Liaison Officer: <strong>${g.assignedOfficer}</strong> • ` : ''}
-          ${g.timeline.slice(-1)[0]?.note || t('tracker_no_notes')}
+          ${g.assignedOfficer ? `Liaison Officer: <strong>${escapeHtml(g.assignedOfficer)}</strong> • ` : ''}
+          ${escapeHtml(g.timeline.slice(-1)[0]?.note || t('tracker_no_notes'))}
         </p>
       </div>
 
@@ -1873,12 +1885,12 @@ window.printStatutoryReceipt = function(ticketId) {
           <h2>UDSC STUDENTS' UNION — S.A.M.A.D.H.A.N REDRESSAL RECEIPT</h2>
           <p>Compliance: DPDP Act 2023 | Project S.E.W.A</p>
         </div>
-        <div class="token">${g.trackToken}</div>
+        <div class="token">${escapeHtml(g.trackToken)}</div>
         <p><strong>Date Lodged:</strong> ${new Date(g.submittedAt).toLocaleString('en-IN')}</p>
-        <p><strong>Department:</strong> ${g.department}</p>
-        <p><strong>Category:</strong> ${g.category}</p>
+        <p><strong>Department:</strong> ${escapeHtml(g.department)}</p>
+        <p><strong>Category:</strong> ${escapeHtml(g.category)}</p>
         <p><strong>Priority SLA:</strong> ${new Date(g.slaDeadline).toLocaleString('en-IN')}</p>
-        <p><strong>Complainant:</strong> ${g.isAnonymous ? 'ANONYMOUS (WHISTLEBLOWER PROTECTED)' : g.studentName}</p>
+        <p><strong>Complainant:</strong> ${g.isAnonymous ? 'ANONYMOUS (WHISTLEBLOWER PROTECTED)' : escapeHtml(g.studentName)}</p>
         <p><strong>Statutory DPDP Consent:</strong> AFFIRMATIVE (SEC 6 VERIFIED)</p>
         <hr/>
         <p>Office of the Students' Union, University of Delhi South Campus (UDSC)</p>

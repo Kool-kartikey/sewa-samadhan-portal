@@ -26,6 +26,23 @@
  * ============================================================================
  */
 
+// Verified Executive Roster for Authenticated Status Updates (Firebase JWT Verified)
+var AUTHORIZED_ADMINS = [
+  "kartikeyatiwari03@gmail.com",
+  "rawalsingh9800@gmail.com"
+];
+
+var VALID_LIFECYCLE_STAGES = [
+  "SUBMITTED",
+  "TRIAGED",
+  "INVESTIGATING",
+  "ACTION_PROPOSED",
+  "RESOLVED"
+];
+
+// Public Firebase Web API Key for project udsc-samadhan-2026 (used only to verify Google ID tokens)
+var FIREBASE_WEB_API_KEY = "AIzaSyADjPR2IKldTKQzsRoLrqU4l1iEXK0AlhU";
+
 // Canonical Comfortable Column Specifications (Dimensions in Pixels)
 var COLUMN_CONFIGS = [
   { index: 1,  name: "Timestamp (IST)",               width: 175, align: "center" },
@@ -40,8 +57,9 @@ var COLUMN_CONFIGS = [
   { index: 10, name: "Complainant Identity",          width: 190, align: "left"   },
   { index: 11, name: "Student Institutional Email",   width: 225, align: "left"   },
   { index: 12, name: "Student Phone Number",          width: 155, align: "center" },
-  { index: 13, name: "Statutory DPDP Consent",         width: 180, align: "center" },
-  { index: 14, name: "SLA Resolution Target (IST)",   width: 180, align: "center" }
+  { index: 13, name: "Statutory DPDP Consent",        width: 180, align: "center" },
+  { index: 14, name: "SLA Resolution Target (IST)",   width: 180, align: "center" },
+  { index: 15, name: "Official Union Action Notes",   width: 340, align: "left"   }
 ];
 
 /**
@@ -198,7 +216,61 @@ function sanitizeSpreadsheetCell(val) {
 }
 
 /**
- * Webhook Handler: Appends grievance records and formats them comfortably
+ * Verifies a Firebase Auth ID Token directly against Google Identity Platform
+ * Ensures only verified, authorized UDSC Union Executives can modify grievance status/notes.
+ */
+function verifyAdminIdToken(idToken) {
+  if (!idToken || typeof idToken !== "string" || idToken.length < 20) {
+    return null;
+  }
+  try {
+    var endpoint = "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + FIREBASE_WEB_API_KEY;
+    var resp = UrlFetchApp.fetch(endpoint, {
+      method: "post",
+      contentType: "application/json",
+      payload: JSON.stringify({ idToken: idToken }),
+      muteHttpExceptions: true
+    });
+    if (resp.getResponseCode() !== 200) {
+      return null;
+    }
+    var parsed = JSON.parse(resp.getContentText());
+    if (!parsed.users || !parsed.users.length) {
+      return null;
+    }
+    var user = parsed.users[0];
+    var email = String(user.email || "").trim().toLowerCase();
+    if (!user.emailVerified || AUTHORIZED_ADMINS.indexOf(email) === -1) {
+      return null;
+    }
+    var defaultName = email === "rawalsingh9800@gmail.com" ? "Rawal Singh (President)" : "Kartikey Tiwari";
+    return {
+      email: email,
+      displayName: user.displayName || defaultName
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * Finds row index (1-based) by canonical Tracking Token in Column B
+ */
+function findRowByTrackToken(sheet, rawToken) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return -1;
+  var tokens = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  var target = String(rawToken || "").trim().toUpperCase();
+  for (var i = 0; i < tokens.length; i++) {
+    if (String(tokens[i][0] || "").trim().toUpperCase() === target) {
+      return i + 2;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Webhook Handler: Appends grievance records or updates status/notes for verified executives
  */
 function doPost(e) {
   try {
@@ -216,16 +288,79 @@ function doPost(e) {
 
     var data = JSON.parse(e.postData.contents);
     
-    // Remote format trigger via POST
+    // Remote format trigger via POST (Authenticated Executives Only)
     if (data.action === "format" || data.action === "optimizeLayout") {
+      var formatAdmin = verifyAdminIdToken(data.idToken);
+      if (!formatAdmin) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Unauthorized: Google Identity verification required."
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
       formatSheetLayout(sheet);
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         message: "Spreadsheet cell sizes, column widths, text wrapping, and row heights have been optimized for comfortable viewing on screen!"
       })).setMimeType(ContentService.MimeType.JSON);
     }
+
+    // Authenticated Status / Action Note Update from Admin Cockpit
+    if (data.action === "updateStatus" || data.action === "addNote") {
+      var adminUser = verifyAdminIdToken(data.idToken);
+      if (!adminUser) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Unauthorized: valid Google Identity session required to update grievance status."
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      var updateToken = String(data.trackToken || "").trim().toUpperCase();
+      if (!/^UDSC-2026-[A-Z]{3,12}-\d{3}$/.test(updateToken)) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Invalid tracking token format."
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      var targetRow = findRowByTrackToken(sheet, updateToken);
+      if (targetRow === -1) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Tracking token not found in ledger."
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      if (data.action === "updateStatus" && data.status) {
+        var nextStatus = String(data.status).trim().toUpperCase();
+        if (VALID_LIFECYCLE_STAGES.indexOf(nextStatus) === -1) {
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "error",
+            message: "Invalid lifecycle status stage."
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+        sheet.getRange(targetRow, 8).setValue(nextStatus);
+      }
+
+      if (data.note) {
+        var noteCell = sheet.getRange(targetRow, 15);
+        var existingNotes = String(noteCell.getValue() || "").trim();
+        var cleanNote = sanitizeSpreadsheetCell(String(data.note).substring(0, 400));
+        var timestampIST = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+        var formattedEntry = "[" + timestampIST + " | " + sanitizeSpreadsheetCell(adminUser.displayName) + "] " + cleanNote;
+        var updatedNotes = existingNotes ? (existingNotes + "\n" + formattedEntry) : formattedEntry;
+        noteCell.setValue(updatedNotes).setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
+        if (sheet.getRowHeight(targetRow) < 64) {
+          sheet.setRowHeight(targetRow, 64);
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "Record " + updateToken + " updated on Public Transparency Ledger by " + adminUser.email + "."
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
     
-    // Strict Validation: Tracking Token format
+    // Strict Validation: Tracking Token format for public intake submission
     var rawToken = String(data.trackToken || "").trim();
     if (!/^UDSC-2026-[A-Z]{3,12}-\d{3}$/.test(rawToken)) {
       return ContentService.createTextOutput(JSON.stringify({
@@ -255,7 +390,8 @@ function doPost(e) {
       email,
       phone,
       "AFFIRMATIVE (SEC 6 COMPLIANT)",
-      data.slaDeadline || ""
+      data.slaDeadline || "",
+      ""
     ];
     
     sheet.appendRow(row);
@@ -301,19 +437,10 @@ function doPost(e) {
 }
 
 /**
- * Web Query & Formatting Trigger Handler
+ * Web Healthcheck Endpoint
+ * Formatting is restricted to authenticated POST requests or in-sheet menu execution.
  */
-function doGet(e) {
-  var action = e && e.parameter && e.parameter.action;
-  if (action === "format" || action === "optimizeLayout") {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    formatSheetLayout(sheet);
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "success",
-      message: "Spreadsheet cell sizes, column widths, text wrapping, and row heights have been optimized for comfortable viewing on screen!"
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
+function doGet() {
   return ContentService.createTextOutput(JSON.stringify({
     status: "online",
     system: "S.A.M.A.D.H.A.N Public Transparency Ledger Sync Engine",

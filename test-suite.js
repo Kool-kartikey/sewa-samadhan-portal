@@ -518,11 +518,27 @@ it('CSV Parsing Engine: RFC 4180 parsing with quotes, commas, and newlines', () 
 it('Bidirectional Sync Engine: app.js and admin.js support live sync from Google Sheet', () => {
   const appJs = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
   const adminJs = fs.readFileSync(path.join(__dirname, 'admin.js'), 'utf8');
+  const gasScript = fs.readFileSync(path.join(__dirname, 'google-sheets-sync.gs'), 'utf8');
 
   assert.ok(appJs.includes('syncFromGoogleSheet'), 'app.js GrievanceRepository must implement syncFromGoogleSheet');
   assert.ok(appJs.includes('handleManualPortalSync'), 'app.js must provide handleManualPortalSync for users');
   assert.ok(adminJs.includes('syncFromGoogleSheet'), 'admin.js AdminRepository must implement syncFromGoogleSheet');
+  assert.ok(adminJs.includes('syncCaseUpdateToGoogleSheet'), 'admin.js AdminRepository must push status updates to Google Sheet');
   assert.ok(adminJs.includes('handleManualSheetSync'), 'admin.js must provide handleManualSheetSync button');
+  assert.ok(gasScript.includes('verifyAdminIdToken'), 'google-sheets-sync.gs must verify Firebase JWT on status updates');
+});
+
+it('Dual-Executive RBAC & Non-Removability: President access cleanly scoped and Architect permanently protected', () => {
+  const adminJs = fs.readFileSync(path.join(__dirname, 'admin.js'), 'utf8');
+  const gasScript = fs.readFileSync(path.join(__dirname, 'google-sheets-sync.gs'), 'utf8');
+
+  assert.ok(adminJs.includes('rawalsingh9800@gmail.com'), 'Must include President Rawal Singh email in executive registry');
+  assert.ok(adminJs.includes('kartikeyatiwari03@gmail.com'), 'Must include Lead System Architect email');
+  assert.ok(adminJs.includes("Vice-President, South Delhi Campus Students' Union 2026/27 & Lead System Architect"), 'Must match exact low-key Architect designation');
+  assert.ok(adminJs.includes("President, South Delhi Campus Students' Union 2026/27"), 'Must honor President designation cleanly');
+  assert.ok(!adminJs.includes('DELEGATED ADMIN'), 'Must not label Union President as a subordinate delegated admin');
+  assert.ok(adminJs.includes('if (actorEmail && !this.isArchitect(actorEmail))'), 'Must block non-Architects from modifying whitelist/system controls');
+  assert.ok(gasScript.includes('rawalsingh9800@gmail.com'), 'Apps Script backend must authorize President for verified status updates');
 });
 
 // ----------------------------------------------------------------------------
