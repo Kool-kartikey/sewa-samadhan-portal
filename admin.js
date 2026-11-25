@@ -124,14 +124,18 @@ function getFirebaseAuth() {
 // ============================================================================
 
 const DEFAULT_GOOGLE_SHEET_VIEW_URL = "https://docs.google.com/spreadsheets/d/1bNGdmCG4k3tGBnZ4f5CmW_6V45KWI_XNVMNct_B22jM/preview";
-const DEFAULT_GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwwOdeufbJ6PsU476UdD0gDOwgeShd3ihRSSNXmjgmVBdAUvaSjs8J4pKyKCF5Uej1A/exec";
+const DEFAULT_GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxzcoFR_qL_20OKO4G408nlmEVsgnTRFZhQqr1shBXxqPlIoO3EbUoAEEa2e9TRX5Fr/exec";
 
 function getGoogleSheetViewUrl() {
   return localStorage.getItem('samadhan_google_sheet_view_url') || DEFAULT_GOOGLE_SHEET_VIEW_URL;
 }
 
 function getGoogleSheetWebhookUrl() {
-  return localStorage.getItem('samadhan_google_sheet_webhook_url') || DEFAULT_GOOGLE_SHEET_WEBHOOK_URL;
+  const saved = localStorage.getItem('samadhan_google_sheet_webhook_url');
+  if (!saved || saved.includes('AKfycbwwOdeufbJ6PsU476UdD0gDOwgeShd3ihRSSNXmjgmVBdAUvaSjs8J4pKyKCF5Uej1A')) {
+    return DEFAULT_GOOGLE_SHEET_WEBHOOK_URL;
+  }
+  return saved;
 }
 
 function setGoogleSheetConfig(viewUrl, webhookUrl) {
