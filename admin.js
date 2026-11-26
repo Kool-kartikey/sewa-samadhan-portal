@@ -848,7 +848,7 @@ function renderAdminSignIn(root) {
                 GATEKEEPER
               </span>
             </span>
-            <p class="text-[10px] text-slate-400">Students' Union • University of Delhi South Campus (UDSC)</p>
+            <p class="text-[10px] text-slate-400">A Project S.E.W.A. Initiative • UDSC Students' Union</p>
           </div>
         </div>
         <a href="/index.html" class="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 border border-amber-500/30 transition hover:border-amber-400 shadow-sm">
@@ -1113,7 +1113,7 @@ function renderAdminCockpit(root, session) {
               </span>
             </div>
             <p class="text-[11px] text-slate-300">
-              Students' Union • University of Delhi South Campus (UDSC)
+              A Project S.E.W.A. Initiative • UDSC Students' Union
             </p>
           </div>
         </div>

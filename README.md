@@ -1,11 +1,18 @@
-# S.A.M.A.D.H.A.N - 24/7 Grievance Redressal and Institutional Accountability Portal
-### University of Delhi South Campus (UDSC)
+# 🏛️ S.A.M.A.D.H.A.N — 24/7 Grievance Redressal & Institutional Accountability Portal
+### A Project S.E.W.A. Initiative • University of Delhi South Campus (UDSC)
 
-> Full Form: S.A.M.A.D.H.A.N - Student Advocacy, Monitoring, Analytics and Digital Heeding of All Needs
-> Root Initiative: Project S.E.W.A (Systematically Eliminating Worrisome Anomalies)
-> Portal Release: v5.7.1
-> Statutory Framework: Digital Personal Data Protection (DPDP) Act, 2023 (India) and UGC (Grievance Redressal of Students) Regulations, 2023
-> Quality Standard: ISO 10002:2018 (Complaints Handling in Organizations)
+> **Full Form:** **S.A.M.A.D.H.A.N** — *Student Advocacy, Monitoring, Analytics and Digital Heeding of All Needs*  
+> **Root Initiative:** **A Project S.E.W.A. Initiative** (*Systematically Eliminating Worrisome Anomalies*)  
+> **Portal Release:** `v5.7.1`  
+> **Statutory Framework:** Digital Personal Data Protection (DPDP) Act, 2023 (India) & UGC (Grievance Redressal of Students) Regulations, 2023  
+> **Quality Standard:** ISO 10002:2018 (Complaints Handling in Organizations)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Initiative-Project%20S.E.W.A.-d97706?style=for-the-badge&logo=shield&logoColor=white" alt="A Project S.E.W.A. Initiative" />
+  <img src="https://img.shields.io/badge/Compliance-DPDP%20Act%202023-10b981?style=for-the-badge" alt="DPDP Act 2023 Compliant" />
+  <img src="https://img.shields.io/badge/Standard-ISO%2010002%3A2018-3b82f6?style=for-the-badge" alt="ISO 10002:2018" />
+  <img src="https://img.shields.io/badge/Cost-100%25%20Free%20Tier%20(Spark)-0f172a?style=for-the-badge" alt="Zero Cloud Cost" />
+</p>
 
 ---
 

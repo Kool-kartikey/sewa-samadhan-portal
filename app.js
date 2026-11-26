@@ -98,7 +98,7 @@ const I18N = {
   en: {
     brand_title: "S.A.M.A.D.H.A.N",
     brand_status: "Online",
-    brand_sub: "Students' Union • University of Delhi South Campus (UDSC)",
+    brand_sub: "A Project S.E.W.A. Initiative • UDSC Students' Union",
     nav_lodge: "Lodge Grievance",
     nav_track: "Track Status",
     nav_telemetry: "Statistics",
@@ -205,7 +205,7 @@ const I18N = {
 
     // Footer
     footer_tagline: "Student Advocacy, Monitoring, Analytics & Digital Heeding of All Needs",
-    footer_desc: "Official Student Grievance Redressal portal maintained by the Students' Union, University of Delhi South Campus (UDSC) under Project S.E.W.A.",
+    footer_desc: "Official Student Grievance Redressal portal engineered under Project S.E.W.A. (Systematically Eliminating Worrisome Anomalies) • Maintained by the Students' Union, University of Delhi South Campus (UDSC).",
     footer_db_note: "Isolated Infrastructure (udsc-samadhan-2026) • DPDP Act 2023",
     footer_quick_services: "Portal Sections",
     footer_service_lodge: "Lodge a Grievance",
@@ -226,7 +226,7 @@ const I18N = {
   hi: {
     brand_title: "समाधान (S.A.M.A.D.H.A.N)",
     brand_status: "सक्रिय",
-    brand_sub: "छात्र संघ • दक्षिण परिसर, दिल्ली विश्वविद्यालय (UDSC)",
+    brand_sub: "प्रोजेक्ट S.E.W.A पहल • दक्षिण परिसर छात्र संघ (UDSC)",
     nav_lodge: "शिकायत दर्ज करें",
     nav_track: "स्थिति देखें",
     nav_telemetry: "आंकड़े",
@@ -333,7 +333,7 @@ const I18N = {
 
     // Footer
     footer_tagline: "छात्र अधिकार, सतत निगरानी, विश्लेषण एवं त्वरित समाधान पहल",
-    footer_desc: "प्रोजेक्ट S.E.W.A के अंतर्गत छात्र संघ, दक्षिण परिसर (दिल्ली विश्वविद्यालय) द्वारा संचालित आधिकारिक शिकायत निवारण पोर्टल।",
+    footer_desc: "प्रोजेक्ट S.E.W.A (Systematically Eliminating Worrisome Anomalies) के अंतर्गत छात्र संघ, दक्षिण परिसर (दिल्ली विश्वविद्यालय) द्वारा संचालित आधिकारिक शिकायत निवारण पोर्टल।",
     footer_db_note: "पृथक डेटाबेस (udsc-samadhan-2026) • DPDP अधिनियम 2023",
     footer_quick_services: "पोर्टल अनुभाग",
     footer_service_lodge: "शिकायत दर्ज करें",
@@ -1143,7 +1143,9 @@ function renderApp() {
 
         <div class="footer-bottom">
           <p>${t('footer_rights_reserved')}</p>
-          <div class="flex items-center gap-3 text-xs">
+          <div class="flex items-center gap-3 text-xs flex-wrap">
+            <span class="text-amber-400 font-semibold">A Project S.E.W.A. Initiative</span>
+            <span class="text-zinc-700">•</span>
             <span class="text-emerald-400 font-semibold">DPDP Act 2023 Compliant</span>
             <span class="text-zinc-700">•</span>
             <span class="text-zinc-400">${t('footer_iso')}</span>
