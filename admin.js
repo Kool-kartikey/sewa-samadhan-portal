@@ -850,7 +850,10 @@ function renderAdminSignIn(root) {
                 GATEKEEPER
               </span>
             </span>
-            <p class="text-[11px] text-zinc-400">A Project S.E.W.A. Initiative • UDSC Students' Union</p>
+            <p class="text-[10px] sm:text-[11px] text-zinc-400 truncate whitespace-nowrap">
+              <span class="sm:hidden">Project S.E.W.A. • UDSC</span>
+              <span class="hidden sm:inline">A Project S.E.W.A. Initiative • UDSC Students' Union</span>
+            </p>
           </div>
         </div>
         <a href="/index.html" class="min-h-[40px] text-xs font-semibold text-amber-300 hover:text-amber-200 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-white/10 transition hover:border-amber-400/50">
@@ -1116,8 +1119,9 @@ function renderAdminCockpit(root, session) {
                 OFFICIAL DESK
               </span>
             </div>
-            <p class="text-[11px] text-zinc-400">
-              A Project S.E.W.A. Initiative • UDSC Students' Union
+            <p class="text-[10px] sm:text-[11px] text-zinc-400 truncate whitespace-nowrap">
+              <span class="sm:hidden">Project S.E.W.A. • UDSC</span>
+              <span class="hidden sm:inline">A Project S.E.W.A. Initiative • UDSC Students' Union</span>
             </p>
           </div>
         </div>

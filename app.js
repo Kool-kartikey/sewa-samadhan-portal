@@ -97,8 +97,10 @@ const LIFECYCLE_STAGES = [
 const I18N = {
   en: {
     brand_title: "S.A.M.A.D.H.A.N",
+    brand_title_short: "SAMADHAN",
     brand_status: "Online",
     brand_sub: "A Project S.E.W.A. Initiative • UDSC Students' Union",
+    brand_sub_mobile: "Project S.E.W.A. • UDSC",
     nav_lodge: "Lodge Grievance",
     nav_track: "Track Status",
     nav_telemetry: "Statistics",
@@ -225,8 +227,10 @@ const I18N = {
   },
   hi: {
     brand_title: "समाधान (S.A.M.A.D.H.A.N)",
+    brand_title_short: "समाधान",
     brand_status: "सक्रिय",
     brand_sub: "प्रोजेक्ट S.E.W.A पहल • दक्षिण परिसर छात्र संघ (UDSC)",
+    brand_sub_mobile: "प्रोजेक्ट S.E.W.A. • UDSC",
     nav_lodge: "शिकायत दर्ज करें",
     nav_track: "स्थिति देखें",
     nav_telemetry: "आंकड़े",
@@ -1019,8 +1023,9 @@ function renderApp() {
                 <span class="hidden sm:inline">${t('brand_status')}</span>
               </span>
             </div>
-            <p class="text-[10px] sm:text-[11px] text-slate-600 dark:text-zinc-400 font-medium mt-0.5 truncate">
-              ${t('brand_sub')}
+            <p class="text-[10px] sm:text-[11px] text-slate-600 dark:text-zinc-400 font-medium mt-0.5 truncate whitespace-nowrap">
+              <span class="sm:hidden">${t('brand_sub_mobile')}</span>
+              <span class="hidden sm:inline">${t('brand_sub')}</span>
             </p>
           </div>
         </button>
