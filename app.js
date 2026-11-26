@@ -962,6 +962,8 @@ const state = {
   formError: null,
   copiedToken: null,
   lastSubmitAt: 0,
+  toastMessage: null,
+  erasureConfirmTicketId: null,
   
   // Track state
   searchToken: '',
@@ -972,6 +974,17 @@ const state = {
 // Apply Initial Theme
 document.documentElement.setAttribute('data-theme', state.theme);
 
+let toastTimer = null;
+function showToast(msg) {
+  state.toastMessage = msg;
+  if (toastTimer) clearTimeout(toastTimer);
+  renderApp();
+  toastTimer = setTimeout(() => {
+    state.toastMessage = null;
+    renderApp();
+  }, 3200);
+}
+
 // ============================================================================
 // 5. MAIN RENDER FUNCTION
 // ============================================================================
@@ -979,82 +992,124 @@ document.documentElement.setAttribute('data-theme', state.theme);
 function renderApp() {
   const root = document.getElementById('root');
   if (!root) return;
+  const isHi = state.language === 'hi';
 
   root.innerHTML = `
-    <!-- Clean Institutional Header -->
-    <header class="site-header sticky top-0 z-50">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+    <!-- WCAG 2.2 SC 2.4.1 Skip Link -->
+    <a href="#main-content" class="skip-link">
+      ${isHi ? 'मुख्य सामग्री पर जाएं' : 'Skip to main content'}
+    </a>
+
+    <!-- Clean Institutional Glass Header -->
+    <header class="site-header sticky top-0 z-40">
+      <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-2">
         
-        <!-- Left: Brand Identity -->
-        <div class="flex items-center gap-3 cursor-pointer select-none" onclick="navigateTab('register')">
-          <div class="brand-crest-box w-9 h-9 sm:w-10 sm:h-10 rounded-lg p-1.5 flex items-center justify-center flex-shrink-0">
+        <!-- Left: Brand Identity (min-w-0 prevents pushing controls off-screen on narrow phones) -->
+        <button type="button" onclick="navigateTab('register')" class="flex items-center gap-2 sm:gap-2.5 text-left cursor-pointer select-none bg-transparent border-0 p-1 -ml-1 rounded-xl min-h-[44px] min-w-0 flex-1">
+          <div class="brand-crest-box w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-1.5 flex items-center justify-center flex-shrink-0">
             ${getTrustCubeSvg("w-full h-full")}
           </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <span class="text-sm sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-none font-display truncate">
                 ${t('brand_title')}
               </span>
-              <span class="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ${t('brand_status')}
+              <span class="inline-flex text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-600/30 items-center gap-1 flex-shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" aria-hidden="true"></span>
+                <span class="hidden sm:inline">${t('brand_status')}</span>
               </span>
             </div>
-            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
+            <p class="text-[10px] sm:text-[11px] text-slate-600 dark:text-zinc-400 font-medium mt-0.5 truncate">
               ${t('brand_sub')}
             </p>
           </div>
-        </div>
+        </button>
+
+        <!-- Center (Desktop md+): Segmented Pill Navigation -->
+        <nav class="hidden md:inline-flex nav-pill-group flex-shrink-0" aria-label="Primary navigation">
+          <button type="button" onclick="navigateTab('register')" aria-current="${state.activeTab === 'register' ? 'page' : 'false'}" class="nav-tab-btn ${state.activeTab === 'register' ? 'active' : ''}">
+            ${iconSvg('edit', 'w-4 h-4')}
+            <span>${t('nav_lodge')}</span>
+          </button>
+          <button type="button" onclick="navigateTab('track')" aria-current="${state.activeTab === 'track' ? 'page' : 'false'}" class="nav-tab-btn ${state.activeTab === 'track' ? 'active' : ''}">
+            ${iconSvg('search', 'w-4 h-4')}
+            <span>${t('nav_track')}</span>
+          </button>
+          <button type="button" onclick="navigateTab('insights')" aria-current="${state.activeTab === 'insights' ? 'page' : 'false'}" class="nav-tab-btn ${state.activeTab === 'insights' ? 'active' : ''}">
+            ${iconSvg('chart', 'w-4 h-4')}
+            <span>${t('nav_telemetry')}</span>
+          </button>
+          <button type="button" onclick="navigateTab('dpdp')" aria-current="${state.activeTab === 'dpdp' ? 'page' : 'false'}" class="nav-tab-btn ${state.activeTab === 'dpdp' ? 'active' : ''}">
+            ${iconSvg('shield', 'w-4 h-4')}
+            <span>${t('nav_rights')}</span>
+          </button>
+        </nav>
 
         <!-- Right: Language & Theme Controls -->
-        <div class="flex items-center gap-2">
-          <button onclick="toggleLanguage()" class="px-2.5 py-1.5 text-xs font-semibold rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800 transition inline-flex items-center gap-1.5">
-            ${iconSvg('globe', 'w-3.5 h-3.5 text-amber-600 dark:text-amber-400')}
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          <button type="button" onclick="toggleLanguage()" aria-label="${isHi ? 'Switch language to English' : 'भाषा हिंदी में बदलें'}" class="px-2.5 sm:px-3 py-1.5 min-h-[38px] text-xs font-semibold rounded-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800 transition inline-flex items-center gap-1.5">
+            ${iconSvg('globe', 'w-3.5 h-3.5 text-amber-700 dark:text-amber-400')}
             <span>${t('lang_toggle')}</span>
           </button>
 
-          <div class="theme-switch-container" role="group" aria-label="Color theme">
-            <button onclick="setTheme('light')" class="theme-switch-btn ${state.theme === 'light' ? 'active' : ''}">
+          <!-- Mobile Single-Tap Theme Toggle (< sm: saves horizontal space so nothing clips) -->
+          <button type="button" onclick="setTheme('${state.theme === 'dark' ? 'light' : 'dark'}')" aria-label="${state.theme === 'dark' ? t('theme_light') : t('theme_dark')}" class="sm:hidden w-[38px] h-[38px] rounded-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-800 dark:text-amber-400 flex items-center justify-center transition active:scale-95">
+            ${iconSvg(state.theme === 'dark' ? 'sun' : 'moon', 'w-4 h-4')}
+          </button>
+
+          <!-- Tablet/Desktop Segmented Theme Switch (sm+) -->
+          <div class="hidden sm:inline-flex theme-switch-container" role="group" aria-label="Color theme">
+            <button type="button" onclick="setTheme('light')" aria-pressed="${state.theme === 'light'}" aria-label="${t('theme_light')}" class="theme-switch-btn ${state.theme === 'light' ? 'active' : ''}">
               ${iconSvg('sun', 'w-3.5 h-3.5')}
-              <span class="hidden sm:inline">${t('theme_light')}</span>
+              <span class="hidden lg:inline">${t('theme_light')}</span>
             </button>
-            <button onclick="setTheme('dark')" class="theme-switch-btn ${state.theme === 'dark' ? 'active' : ''}">
+            <button type="button" onclick="setTheme('dark')" aria-pressed="${state.theme === 'dark'}" aria-label="${t('theme_dark')}" class="theme-switch-btn ${state.theme === 'dark' ? 'active' : ''}">
               ${iconSvg('moon', 'w-3.5 h-3.5')}
-              <span class="hidden sm:inline">${t('theme_dark')}</span>
+              <span class="hidden lg:inline">${t('theme_dark')}</span>
             </button>
           </div>
         </div>
 
-      </div>
-
-      <!-- Navigation Bar -->
-      <div class="site-header-sub px-4 sm:px-6 py-2">
-        <div class="max-w-5xl mx-auto">
-          <nav class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2" aria-label="Primary navigation">
-            <button onclick="navigateTab('register')" class="nav-tab-btn ${state.activeTab === 'register' ? 'active' : ''}">
-              ${iconSvg('edit', 'w-4 h-4')}
-              <span>${t('nav_lodge')}</span>
-            </button>
-            <button onclick="navigateTab('track')" class="nav-tab-btn ${state.activeTab === 'track' ? 'active' : ''}">
-              ${iconSvg('search', 'w-4 h-4')}
-              <span>${t('nav_track')}</span>
-            </button>
-            <button onclick="navigateTab('insights')" class="nav-tab-btn ${state.activeTab === 'insights' ? 'active' : ''}">
-              ${iconSvg('chart', 'w-4 h-4')}
-              <span>${t('nav_telemetry')}</span>
-            </button>
-            <button onclick="navigateTab('dpdp')" class="nav-tab-btn ${state.activeTab === 'dpdp' ? 'active' : ''}">
-              ${iconSvg('shield', 'w-4 h-4')}
-              <span>${t('nav_rights')}</span>
-            </button>
-          </nav>
-        </div>
       </div>
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <main id="main-content" tabindex="-1" class="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-7">
       ${renderActiveTab()}
     </main>
+
+    <!-- Mobile Thumb-Zone Bottom Dock (< md) -->
+    <nav class="mobile-bottom-dock md:hidden grid grid-cols-4 gap-1" aria-label="Mobile navigation">
+      <button type="button" onclick="navigateTab('register')" aria-current="${state.activeTab === 'register' ? 'page' : 'false'}" class="mobile-dock-btn ${state.activeTab === 'register' ? 'active' : ''}">
+        <span class="mobile-dock-pill">${iconSvg('edit', 'w-5 h-5')}</span>
+        <span>${isHi ? 'दर्ज करें' : 'Lodge'}</span>
+      </button>
+      <button type="button" onclick="navigateTab('track')" aria-current="${state.activeTab === 'track' ? 'page' : 'false'}" class="mobile-dock-btn ${state.activeTab === 'track' ? 'active' : ''}">
+        <span class="mobile-dock-pill">${iconSvg('search', 'w-5 h-5')}</span>
+        <span>${isHi ? 'स्थिति' : 'Track'}</span>
+      </button>
+      <button type="button" onclick="navigateTab('insights')" aria-current="${state.activeTab === 'insights' ? 'page' : 'false'}" class="mobile-dock-btn ${state.activeTab === 'insights' ? 'active' : ''}">
+        <span class="mobile-dock-pill">${iconSvg('chart', 'w-5 h-5')}</span>
+        <span>${isHi ? 'आंकड़े' : 'Stats'}</span>
+      </button>
+      <button type="button" onclick="navigateTab('dpdp')" aria-current="${state.activeTab === 'dpdp' ? 'page' : 'false'}" class="mobile-dock-btn ${state.activeTab === 'dpdp' ? 'active' : ''}">
+        <span class="mobile-dock-pill">${iconSvg('shield', 'w-5 h-5')}</span>
+        <span>${isHi ? 'अधिकार' : 'Rights'}</span>
+      </button>
+    </nav>
+
+    <!-- Accessible Live Toast Feedback -->
+    <div role="status" aria-live="polite" class="${state.toastMessage ? '' : 'sr-only'}">
+      ${state.toastMessage ? `
+        <div class="samadhan-toast">
+          ${iconSvg('check', 'w-4 h-4 text-emerald-400 flex-shrink-0')}
+          <span>${escapeHtml(state.toastMessage)}</span>
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- Accessible Section 12 Right-to-Erasure Dialog -->
+    ${state.erasureConfirmTicketId ? renderErasureConfirmDialog(state.erasureConfirmTicketId) : ''}
 
     <!-- Institutional Footer -->
     <footer class="site-footer">
@@ -1080,8 +1135,8 @@ function renderApp() {
             </p>
           </div>
 
-          <!-- Column 2: Quick Links -->
-          <div class="footer-col">
+          <!-- Column 2: Quick Links (Hidden on Mobile since Bottom Dock handles navigation) -->
+          <div class="footer-col hidden sm:block">
             <h4>${t('footer_quick_services')}</h4>
             <ul>
               <li><a href="#" onclick="navigateTab('register'); return false;">${iconSvg('edit', 'w-3.5 h-3.5')}<span>${t('footer_service_lodge')}</span></a></li>
@@ -1180,46 +1235,62 @@ function renderActiveTab() {
 // ============================================================================
 
 function renderRegisterWizard() {
+  const isHi = state.language === 'hi';
+  const progressPct = state.wizardStep === 1 ? '0%' : (state.wizardStep === 2 ? '50%' : '100%');
   return `
-    <div class="max-w-4xl mx-auto space-y-5">
-      
-      <!-- Stepper Progress Bar -->
-      <div class="civic-card py-4 px-5">
-        <div class="flex items-center justify-between relative max-w-lg mx-auto">
-          
-          <div class="flex flex-col items-center gap-1.5 z-10">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${state.wizardStep >= 1 ? 'bg-amber-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-300 dark:border-zinc-700'}">
-              1
-            </div>
-            <span class="text-[11px] font-semibold ${state.wizardStep >= 1 ? 'text-amber-700 dark:text-amber-400' : 'text-slate-500 dark:text-zinc-400'}">
-              ${state.language === 'hi' ? 'श्रेणी' : 'Category'}
-            </span>
-          </div>
+    <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
 
-          <div class="flex-1 h-0.5 mx-3 ${state.wizardStep >= 2 ? 'bg-amber-500' : 'bg-slate-200 dark:bg-zinc-800'}"></div>
-
-          <div class="flex flex-col items-center gap-1.5 z-10">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${state.wizardStep >= 2 ? 'bg-amber-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-300 dark:border-zinc-700'}">
-              2
-            </div>
-            <span class="text-[11px] font-semibold ${state.wizardStep >= 2 ? 'text-amber-700 dark:text-amber-400' : 'text-slate-500 dark:text-zinc-400'}">
-              ${state.language === 'hi' ? 'विवरण' : 'Details'}
-            </span>
-          </div>
-
-          <div class="flex-1 h-0.5 mx-3 ${state.wizardStep >= 3 ? 'bg-amber-500' : 'bg-slate-200 dark:bg-zinc-800'}"></div>
-
-          <div class="flex flex-col items-center gap-1.5 z-10">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${state.wizardStep >= 3 ? 'bg-amber-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-300 dark:border-zinc-700'}">
-              3
-            </div>
-            <span class="text-[11px] font-semibold ${state.wizardStep >= 3 ? 'text-amber-700 dark:text-amber-400' : 'text-slate-500 dark:text-zinc-400'}">
-              ${state.language === 'hi' ? 'सहमति' : 'Consent'}
-            </span>
-          </div>
-
+      <!-- Unified Compact Assurance & Continuous 3-Step Progress Bar -->
+      <nav aria-label="${isHi ? 'शिकायत दर्ज करने की प्रगति' : 'Grievance filing progress'}" class="civic-card py-2.5 sm:py-3.5 px-3.5 sm:px-5 space-y-2.5">
+        <!-- Sleek 1-Line Assurance Strip with Breakpoint Divider -->
+        <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-300/80 dark:border-white/15 text-[11px]">
+          <span class="inline-flex items-center gap-1.5 font-semibold text-slate-800 dark:text-zinc-200 truncate">
+            ${iconSvg('shield', 'w-3.5 h-3.5 text-amber-700 dark:text-amber-400 flex-shrink-0')}
+            <span class="truncate">${isHi ? '24/7 निवारण • 90-सेकंड प्रक्रिया' : '24/7 Grievance Cell • 90s Filing'}</span>
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-600/30 font-semibold flex-shrink-0 text-[10px]">
+            ${iconSvg('lock', 'w-3 h-3')}
+            <span>${isHi ? 'गुमनाम • DPDP 2023' : 'Anonymous • DPDP'}</span>
+          </span>
         </div>
-      </div>
+      
+        <!-- Continuous Contrasting Track Bridging Steps 1 -> 2 -> 3 -->
+        <div class="relative max-w-md mx-auto pt-0.5">
+          <div aria-hidden="true" class="absolute top-4 left-7 right-7 h-[2.5px] bg-slate-300 dark:bg-zinc-700 rounded-full z-0 overflow-hidden">
+            <div class="h-full bg-amber-700 dark:bg-amber-400 transition-all duration-300" style="width: ${progressPct}"></div>
+          </div>
+
+          <ol class="relative z-10 flex items-center justify-between">
+          
+            <li class="flex flex-col items-center gap-1 bg-white dark:bg-[#18181b] px-2 rounded-lg" ${state.wizardStep === 1 ? 'aria-current="step"' : ''}>
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs tabular-nums transition ${state.wizardStep > 1 ? 'bg-emerald-700 text-white' : (state.wizardStep === 1 ? 'bg-amber-700 dark:bg-amber-500 text-white dark:text-zinc-950 shadow-sm ring-4 ring-amber-500/20' : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-400 border-2 border-slate-300 dark:border-zinc-700')}">
+                ${state.wizardStep > 1 ? iconSvg('check', 'w-3.5 h-3.5') : '1'}
+              </div>
+              <span class="text-[11px] font-bold ${state.wizardStep >= 1 ? 'text-amber-800 dark:text-amber-400' : 'text-slate-600 dark:text-zinc-400'}">
+                ${isHi ? 'श्रेणी' : 'Category'}
+              </span>
+            </li>
+
+            <li class="flex flex-col items-center gap-1 bg-white dark:bg-[#18181b] px-2 rounded-lg" ${state.wizardStep === 2 ? 'aria-current="step"' : ''}>
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs tabular-nums transition ${state.wizardStep > 2 ? 'bg-emerald-700 text-white' : (state.wizardStep === 2 ? 'bg-amber-700 dark:bg-amber-500 text-white dark:text-zinc-950 shadow-sm ring-4 ring-amber-500/20' : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-400 border-2 border-slate-300 dark:border-zinc-700')}">
+                ${state.wizardStep > 2 ? iconSvg('check', 'w-3.5 h-3.5') : '2'}
+              </div>
+              <span class="text-[11px] font-bold ${state.wizardStep >= 2 ? 'text-amber-800 dark:text-amber-400' : 'text-slate-600 dark:text-zinc-400'}">
+                ${isHi ? 'विवरण' : 'Details'}
+              </span>
+            </li>
+
+            <li class="flex flex-col items-center gap-1 bg-white dark:bg-[#18181b] px-2 rounded-lg" ${state.wizardStep === 3 ? 'aria-current="step"' : ''}>
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs tabular-nums transition ${state.wizardStep === 3 ? 'bg-amber-700 dark:bg-amber-500 text-white dark:text-zinc-950 shadow-sm ring-4 ring-amber-500/20' : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-400 border-2 border-slate-300 dark:border-zinc-700'}">
+                3
+              </div>
+              <span class="text-[11px] font-bold ${state.wizardStep >= 3 ? 'text-amber-800 dark:text-amber-400' : 'text-slate-600 dark:text-zinc-400'}">
+                ${isHi ? 'सहमति' : 'Consent'}
+              </span>
+            </li>
+          </ol>
+        </div>
+      </nav>
 
       ${state.wizardStep === 1 ? renderWizardStep1() : ''}
       ${state.wizardStep === 2 ? renderWizardStep2() : ''}
@@ -1231,28 +1302,39 @@ function renderRegisterWizard() {
 
 function renderWizardStep1() {
   return `
-    <div class="civic-card space-y-6">
+    <div class="civic-card civic-card-accent space-y-3.5 sm:space-y-5">
       <div class="civic-card-header">
-        <h2 class="text-lg sm:text-xl font-bold">${t('step_1_title')}</h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">${t('step_1_sub')}</p>
+        <h1 class="text-base sm:text-xl font-bold">${t('step_1_title')}</h1>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-0.5">${t('step_1_sub')}</p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        ${Object.values(CATEGORIES).map(cat => `
-          <button
-            type="button"
-            onclick="selectCategory('${cat.id}')"
-            class="category-tile ${state.selectedCategory === cat.id ? 'selected' : ''}"
-          >
-            <div class="w-8 h-8 rounded-md flex items-center justify-center mb-2.5 ${state.selectedCategory === cat.id ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300'}">
-              ${iconSvg(cat.iconName, 'w-4 h-4')}
-            </div>
-            <h3>${state.language === 'hi' ? cat.hi : cat.label}</h3>
-          </button>
-        `).join('')}
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3" role="group" aria-label="${t('step_1_title')}">
+        ${Object.values(CATEGORIES).map(cat => {
+          const isSelected = state.selectedCategory === cat.id;
+          return `
+            <button
+              type="button"
+              onclick="selectCategory('${cat.id}')"
+              aria-pressed="${isSelected}"
+              class="category-tile ${isSelected ? 'selected' : ''}"
+            >
+              <div class="flex items-start justify-between w-full mb-1.5 sm:mb-2.5">
+                <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${isSelected ? 'bg-amber-700/15 dark:bg-amber-400/15 text-amber-800 dark:text-amber-400' : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'}">
+                  ${iconSvg(cat.iconName, 'w-3.5 h-3.5 sm:w-4 sm:h-4')}
+                </div>
+                ${isSelected ? `
+                  <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-700 dark:bg-amber-500 text-white dark:text-zinc-950 flex items-center justify-center">
+                    ${iconSvg('check', 'w-2.5 h-2.5 sm:w-3 sm:h-3')}
+                  </span>
+                ` : ''}
+              </div>
+              <h3>${state.language === 'hi' ? cat.hi : cat.label}</h3>
+            </button>
+          `;
+        }).join('')}
       </div>
 
-      <div class="flex justify-end pt-4 border-t border-slate-200 dark:border-zinc-800">
+      <div class="flex justify-end pt-3 sm:pt-4 border-t border-slate-300 dark:border-white/15">
         <button type="button" onclick="goToStep(2)" class="btn btn-primary w-full sm:w-auto">
           <span>${t('step_1_next')}</span>
           ${iconSvg('arrowRight', 'w-4 h-4')}
@@ -1264,24 +1346,25 @@ function renderWizardStep1() {
 
 function renderWizardStep2() {
   const defaultDate = state.draftDate || new Date().toISOString().split('T')[0];
+  const descLen = (state.draftDesc || '').length;
   return `
-    <div class="civic-card space-y-6">
+    <div class="civic-card civic-card-accent space-y-5">
       <div class="civic-card-header">
-        <h2 class="text-lg sm:text-xl font-bold">${t('step_2_title')}</h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">${t('step_2_sub')}</p>
+        <h1 class="text-lg sm:text-xl font-bold">${t('step_2_title')}</h1>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-1">${t('step_2_sub')}</p>
       </div>
 
       ${state.formError ? `
-        <div class="p-3 rounded-lg bg-rose-500/10 border border-rose-500/35 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2 font-medium" role="alert">
+        <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-600/35 text-xs text-rose-800 dark:text-rose-300 flex items-center gap-2.5 font-semibold" role="alert">
           ${iconSvg('alert', 'w-4 h-4 flex-shrink-0')}
           <span>${escapeHtml(state.formError)}</span>
         </div>
       ` : ''}
 
-      <div class="space-y-4">
+      <div class="space-y-5">
         
         <div>
-          <label for="incidentTitle" class="form-label">${t('field_subject')} <span class="text-rose-600">*</span></label>
+          <label for="incidentTitle" class="form-label">${t('field_subject')} <span class="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span></label>
           <input 
             type="text" 
             id="incidentTitle" 
@@ -1295,7 +1378,7 @@ function renderWizardStep2() {
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label for="departmentSelect" class="form-label">${t('field_dept')} <span class="text-rose-600">*</span></label>
+            <label for="departmentSelect" class="form-label">${t('field_dept')} <span class="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span></label>
             <select id="departmentSelect" class="form-select">
               ${UDSC_DEPARTMENTS.map(d => `
                 <option value="${escapeHtml(d.id)}" ${state.draftDept === d.id ? 'selected' : ''}>${escapeHtml(state.language === 'hi' ? d.hi : d.en)}</option>
@@ -1304,7 +1387,7 @@ function renderWizardStep2() {
           </div>
 
           <div>
-            <label for="incidentDate" class="form-label">${t('field_date')} <span class="text-rose-600">*</span></label>
+            <label for="incidentDate" class="form-label">${t('field_date')} <span class="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span></label>
             <input 
               type="date" 
               id="incidentDate" 
@@ -1314,76 +1397,97 @@ function renderWizardStep2() {
           </div>
         </div>
 
-        <div>
-          <span class="form-label">${t('field_urgency')} <span class="text-rose-600">*</span></span>
+        <fieldset>
+          <legend class="form-label">${t('field_urgency')} <span class="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span></legend>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            <label class="p-3 rounded-lg border cursor-pointer transition flex items-center gap-2.5 ${state.severity === 'LOW' ? 'bg-emerald-500/10 border-emerald-600/50' : 'civic-well border-slate-200 dark:border-zinc-800'}">
+            <label class="urgency-card ${state.severity === 'LOW' ? 'bg-emerald-500/10 border-emerald-700/60 dark:border-emerald-400/60' : ''}">
               <input type="radio" name="severityRadio" value="LOW" onchange="setSeverity('LOW')" ${state.severity === 'LOW' ? 'checked' : ''} class="sr-only" />
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 flex-shrink-0"></span>
-              <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">${t('urgency_low')}</span>
+              <span class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-700 dark:bg-emerald-400 flex-shrink-0" aria-hidden="true"></span>
+                <span class="text-xs font-semibold text-slate-900 dark:text-slate-100">${t('urgency_low')}</span>
+              </span>
+              <span class="font-mono text-[10px] font-bold text-emerald-800 dark:text-emerald-300">7d SLA</span>
             </label>
-            <label class="p-3 rounded-lg border cursor-pointer transition flex items-center gap-2.5 ${state.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-600/50' : 'civic-well border-slate-200 dark:border-zinc-800'}">
+            <label class="urgency-card ${state.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-700/60 dark:border-amber-400/60' : ''}">
               <input type="radio" name="severityRadio" value="MEDIUM" onchange="setSeverity('MEDIUM')" ${state.severity === 'MEDIUM' ? 'checked' : ''} class="sr-only" />
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0"></span>
-              <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">${t('urgency_med')}</span>
+              <span class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-600 dark:bg-amber-400 flex-shrink-0" aria-hidden="true"></span>
+                <span class="text-xs font-semibold text-slate-900 dark:text-slate-100">${t('urgency_med')}</span>
+              </span>
+              <span class="font-mono text-[10px] font-bold text-amber-800 dark:text-amber-300">72h SLA</span>
             </label>
-            <label class="p-3 rounded-lg border cursor-pointer transition flex items-center gap-2.5 ${state.severity === 'CRITICAL' ? 'bg-rose-500/10 border-rose-600/50' : 'civic-well border-slate-200 dark:border-zinc-800'}">
+            <label class="urgency-card ${state.severity === 'CRITICAL' ? 'bg-rose-500/10 border-rose-700/60 dark:border-rose-400/60' : ''}">
               <input type="radio" name="severityRadio" value="CRITICAL" onchange="setSeverity('CRITICAL')" ${state.severity === 'CRITICAL' ? 'checked' : ''} class="sr-only" />
-              <span class="w-2.5 h-2.5 rounded-full bg-rose-600 flex-shrink-0"></span>
-              <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">${t('urgency_crit')}</span>
+              <span class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-700 dark:bg-rose-400 flex-shrink-0" aria-hidden="true"></span>
+                <span class="text-xs font-semibold text-slate-900 dark:text-slate-100">${t('urgency_crit')}</span>
+              </span>
+              <span class="font-mono text-[10px] font-bold text-rose-800 dark:text-rose-300">24h SLA</span>
             </label>
           </div>
-        </div>
+        </fieldset>
 
         <div>
-          <label for="incidentDescription" class="form-label">${t('field_desc')} <span class="text-rose-600">*</span></label>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="incidentDescription" class="form-label mb-0">${t('field_desc')} <span class="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span></label>
+            <span id="descCharCount" class="text-[11px] font-mono text-slate-600 dark:text-zinc-400 tabular-nums">${descLen} / 3000</span>
+          </div>
           <textarea 
             id="incidentDescription" 
             rows="4" 
             required 
             maxlength="3000"
+            oninput="const c = document.getElementById('descCharCount'); if (c) c.textContent = this.value.length + ' / 3000';"
             placeholder="${t('field_desc_ph')}" 
             class="form-textarea"
           >${escapeHtml(state.draftDesc || '')}</textarea>
         </div>
 
-        <!-- Privacy / Anonymous Option -->
-        <div class="p-4 rounded-lg civic-well space-y-3">
-          <div class="flex items-start sm:items-center justify-between gap-3">
-            <div class="space-y-0.5">
-              <span class="text-sm font-semibold inline-flex items-center gap-1.5">
-                ${iconSvg('shield', 'w-4 h-4 text-amber-600 dark:text-amber-400')}
+        <!-- Privacy / Anonymous Option (Accessible Pill Switch) -->
+        <div class="p-4 rounded-xl civic-well space-y-3">
+          <label for="anonymousToggle" class="flex items-center justify-between gap-4 cursor-pointer">
+            <span class="space-y-0.5">
+              <span class="text-sm font-semibold inline-flex items-center gap-1.5 text-slate-900 dark:text-white">
+                ${iconSvg('shield', 'w-4 h-4 text-amber-700 dark:text-amber-400')}
                 <span>${t('anon_toggle_title')}</span>
               </span>
-              <p class="text-xs text-slate-500 dark:text-zinc-400">${t('anon_toggle_sub')}</p>
-            </div>
-            <input 
-              type="checkbox" 
-              id="anonymousToggle" 
-              onchange="toggleAnonymous(this.checked)"
-              ${state.isAnonymous ? 'checked' : ''} 
-              class="w-5 h-5 accent-amber-600 rounded cursor-pointer mt-0.5 sm:mt-0 flex-shrink-0" 
-            />
-          </div>
+              <span id="anonToggleHelp" class="block text-xs text-slate-600 dark:text-zinc-400">${t('anon_toggle_sub')}</span>
+            </span>
+            <span class="toggle-pill-wrap">
+              <input 
+                type="checkbox" 
+                id="anonymousToggle" 
+                role="switch"
+                aria-checked="${state.isAnonymous}"
+                aria-describedby="anonToggleHelp"
+                onchange="toggleAnonymous(this.checked)"
+                ${state.isAnonymous ? 'checked' : ''} 
+                class="toggle-pill-input" 
+              />
+              <span class="toggle-pill-track" aria-hidden="true">
+                <span class="toggle-pill-thumb"></span>
+              </span>
+            </span>
+          </label>
 
           ${state.isAnonymous ? `
-            <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-md text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+            <div class="p-3 bg-amber-500/10 border border-amber-600/30 rounded-lg text-xs text-amber-900 dark:text-amber-300 flex items-center gap-2 font-medium">
               ${iconSvg('check', 'w-4 h-4 flex-shrink-0')}
               <span>${t('anon_active_notice')}</span>
             </div>
           ` : `
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200 dark:border-zinc-800">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-200 dark:border-zinc-800">
               <div>
                 <label for="studentName" class="form-label text-xs">${t('field_name')}</label>
-                <input type="text" id="studentName" maxlength="100" value="${escapeHtml(state.draftName || '')}" placeholder="${t('field_name_ph')}" class="form-input text-xs" />
+                <input type="text" id="studentName" maxlength="100" value="${escapeHtml(state.draftName || '')}" placeholder="${t('field_name_ph')}" class="form-input text-sm" />
               </div>
               <div>
                 <label for="studentEmail" class="form-label text-xs">${t('field_email')}</label>
-                <input type="email" id="studentEmail" maxlength="100" value="${escapeHtml(state.draftEmail || '')}" placeholder="${t('field_email_ph')}" class="form-input text-xs" />
+                <input type="email" id="studentEmail" maxlength="100" value="${escapeHtml(state.draftEmail || '')}" placeholder="${t('field_email_ph')}" class="form-input text-sm" />
               </div>
               <div>
                 <label for="studentPhone" class="form-label text-xs">${t('field_phone')}</label>
-                <input type="tel" id="studentPhone" maxlength="30" value="${escapeHtml(state.draftPhone || '')}" placeholder="${t('field_phone_ph')}" class="form-input text-xs" />
+                <input type="tel" id="studentPhone" maxlength="30" value="${escapeHtml(state.draftPhone || '')}" placeholder="${t('field_phone_ph')}" class="form-input text-sm" />
               </div>
             </div>
           `}
@@ -1391,7 +1495,7 @@ function renderWizardStep2() {
 
       </div>
 
-      <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-zinc-800">
+      <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-zinc-800">
         <button type="button" onclick="goToStep(1)" class="btn btn-secondary">
           ${iconSvg('arrowLeft', 'w-4 h-4')}
           <span>${t('btn_back')}</span>
@@ -1407,53 +1511,53 @@ function renderWizardStep2() {
 
 function renderWizardStep3() {
   return `
-    <div class="civic-card space-y-6">
+    <div class="civic-card civic-card-accent space-y-5">
       <div class="civic-card-header">
-        <h2 class="text-lg sm:text-xl font-bold">${t('step_3_title')}</h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">${t('step_3_sub')}</p>
+        <h1 class="text-lg sm:text-xl font-bold">${t('step_3_title')}</h1>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-1">${t('step_3_sub')}</p>
       </div>
 
       ${state.formError ? `
-        <div class="p-3 rounded-lg bg-rose-500/10 border border-rose-500/35 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2 font-medium" role="alert">
+        <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-600/35 text-xs text-rose-800 dark:text-rose-300 flex items-center gap-2.5 font-semibold" role="alert">
           ${iconSvg('alert', 'w-4 h-4 flex-shrink-0')}
           <span>${escapeHtml(state.formError)}</span>
         </div>
       ` : ''}
 
       <!-- Review Summary Strip -->
-      <div class="p-3.5 rounded-lg civic-well text-xs grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div class="p-4 rounded-xl civic-well text-xs grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
-          <span class="text-slate-500 dark:text-zinc-400 block">${state.language === 'hi' ? 'विषय' : 'Subject'}</span>
-          <strong class="text-slate-900 dark:text-white">${escapeHtml(state.draftTitle || '')}</strong>
+          <span class="text-slate-600 dark:text-zinc-400 block mb-0.5">${state.language === 'hi' ? 'विषय' : 'Subject'}</span>
+          <strong class="text-slate-900 dark:text-white text-sm">${escapeHtml(state.draftTitle || '')}</strong>
         </div>
         <div>
-          <span class="text-slate-500 dark:text-zinc-400 block">${state.language === 'hi' ? 'विभाग' : 'Department'}</span>
-          <strong class="text-slate-900 dark:text-white">${escapeHtml(getDepartmentName(state.draftDept || UDSC_DEPARTMENTS[0].id))}</strong>
+          <span class="text-slate-600 dark:text-zinc-400 block mb-0.5">${state.language === 'hi' ? 'विभाग' : 'Department'}</span>
+          <strong class="text-slate-900 dark:text-white text-sm">${escapeHtml(getDepartmentName(state.draftDept || UDSC_DEPARTMENTS[0].id))}</strong>
         </div>
         <div>
-          <span class="text-slate-500 dark:text-zinc-400 block">${state.language === 'hi' ? 'गोपनीयता' : 'Privacy Mode'}</span>
-          <strong class="text-slate-900 dark:text-white">${state.isAnonymous ? (state.language === 'hi' ? 'गुमनाम (DPDP धारा 8)' : 'Anonymous (Section 8)') : escapeHtml(state.draftName || 'Student')}</strong>
+          <span class="text-slate-600 dark:text-zinc-400 block mb-0.5">${state.language === 'hi' ? 'गोपनीयता' : 'Privacy Mode'}</span>
+          <strong class="text-slate-900 dark:text-white text-sm">${state.isAnonymous ? (state.language === 'hi' ? 'गुमनाम (DPDP धारा 8)' : 'Anonymous (Section 8)') : escapeHtml(state.draftName || 'Student')}</strong>
         </div>
       </div>
 
       <!-- Statutory Consent Box -->
-      <div class="p-5 rounded-lg border border-amber-500/35 bg-amber-500/5 space-y-3">
+      <div class="p-5 rounded-xl border border-amber-600/35 bg-amber-500/5 space-y-3">
         <span class="badge badge-submitted text-[10px]">
           ${t('dpdp_box_badge')}
         </span>
-        <p class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-zinc-300">
+        <p class="text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-zinc-300">
           "${t('dpdp_box_text')}"
         </p>
 
-        <label class="flex items-start gap-3 pt-3 border-t border-slate-200 dark:border-zinc-800 cursor-pointer">
-          <input type="checkbox" id="consentCheckbox" required class="w-4 h-4 accent-amber-600 rounded mt-1 cursor-pointer flex-shrink-0" />
-          <span class="text-xs font-semibold leading-relaxed text-slate-900 dark:text-white">
+        <label for="consentCheckbox" class="flex items-start gap-3 pt-3 border-t border-slate-200 dark:border-zinc-800 cursor-pointer min-h-[44px]">
+          <input type="checkbox" id="consentCheckbox" required class="w-5 h-5 accent-amber-700 rounded mt-0.5 cursor-pointer flex-shrink-0" />
+          <span class="text-xs sm:text-sm font-semibold leading-relaxed text-slate-900 dark:text-white">
             ${t('consent_checkbox_label')}
           </span>
         </label>
       </div>
 
-      <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-zinc-800">
+      <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-zinc-800">
         <button type="button" onclick="goToStep(2)" class="btn btn-secondary">
           ${iconSvg('arrowLeft', 'w-4 h-4')}
           <span>${t('btn_back')}</span>
@@ -1544,13 +1648,14 @@ function renderTracker() {
       
       ${renderTransparencyLedgerBanner()}
 
-      <div class="civic-card space-y-3">
+      <div class="civic-card space-y-4">
         <div>
-          <h2 class="text-lg sm:text-xl font-bold">${t('tracker_heading')}</h2>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">${t('tracker_sub')}</p>
+          <h1 class="text-lg sm:text-xl font-bold">${t('tracker_heading')}</h1>
+          <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-1">${t('tracker_sub')}</p>
         </div>
 
-        <form onsubmit="handleTrackerSearch(event)" class="flex flex-col sm:flex-row gap-2">
+        <form onsubmit="handleTrackerSearch(event)" class="flex flex-col sm:flex-row gap-2.5">
+          <label for="trackerSearchInput" class="sr-only">${t('tracker_heading')}</label>
           <input 
             type="text" 
             id="trackerSearchInput" 
@@ -1566,22 +1671,22 @@ function renderTracker() {
       </div>
 
       ${g ? renderTicketDetails(g) : state.trackerNotFound ? `
-        <div class="civic-card text-center py-10 space-y-2 border border-rose-500/30">
-          <div class="w-10 h-10 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-1">
+        <div class="civic-card text-center py-10 space-y-2 border border-rose-600/30" role="status">
+          <div class="w-11 h-11 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto mb-1">
             ${iconSvg('alert', 'w-5 h-5')}
           </div>
-          <h3 class="font-bold text-base">${t('tracker_not_found')}: <span class="font-mono text-rose-600 dark:text-rose-400">${escapeHtml(state.searchToken)}</span></h3>
-          <p class="text-xs text-slate-500 dark:text-zinc-400 max-w-md mx-auto">
+          <h2 class="font-bold text-base">${t('tracker_not_found')}: <span class="font-mono text-rose-700 dark:text-rose-400">${escapeHtml(state.searchToken)}</span></h2>
+          <p class="text-xs text-slate-600 dark:text-zinc-400 max-w-md mx-auto">
             ${t('tracker_not_found_desc')}
           </p>
         </div>
       ` : `
         <div class="civic-card text-center py-10 space-y-2">
-          <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center justify-center mx-auto mb-1">
+          <div class="w-11 h-11 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 flex items-center justify-center mx-auto mb-1">
             ${iconSvg('search', 'w-5 h-5')}
           </div>
-          <h3 class="font-bold text-base">${t('tracker_empty_title')}</h3>
-          <p class="text-xs text-slate-500 dark:text-zinc-400 max-w-md mx-auto">
+          <h2 class="font-bold text-base">${t('tracker_empty_title')}</h2>
+          <p class="text-xs text-slate-600 dark:text-zinc-400 max-w-md mx-auto">
             ${t('tracker_empty_desc')}
           </p>
         </div>
@@ -1595,59 +1700,59 @@ function renderTicketDetails(g) {
   const currentStageIndex = LIFECYCLE_STAGES.findIndex(s => s.key === g.status);
 
   return `
-    <div class="civic-card space-y-6">
+    <div class="civic-card civic-card-accent space-y-6">
       
       <!-- Case Meta Header -->
       <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-800">
         <div>
-          <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">${escapeHtml(g.trackToken)}</span>
-          <h3 class="text-lg font-black mt-0.5">${escapeHtml(g.title)}</h3>
-          <p class="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-            ${t('tracker_dept')}: <strong>${escapeHtml(getDepartmentName(g.department))}</strong>
+          <span class="font-mono text-xs font-bold text-amber-800 dark:text-amber-400">${escapeHtml(g.trackToken)}</span>
+          <h2 class="text-lg font-bold mt-0.5">${escapeHtml(g.title)}</h2>
+          <p class="text-xs text-slate-600 dark:text-zinc-400 mt-1">
+            ${t('tracker_dept')}: <strong class="text-slate-900 dark:text-zinc-200">${escapeHtml(getDepartmentName(g.department))}</strong>
           </p>
         </div>
 
-        <div class="flex flex-col items-end gap-1">
+        <div class="flex flex-col sm:items-end gap-1.5">
           <span class="badge badge-${LIFECYCLE_STAGES.find(s => s.key === g.status)?.color || 'submitted'} text-xs">
             ${escapeHtml(getStageLabel(g.status))}
           </span>
-          <span class="text-[11px] text-slate-500 dark:text-zinc-400">
-            ${t('tracker_sla')}: <strong class="text-amber-600 dark:text-amber-400">${new Date(g.slaDeadline).toLocaleDateString('en-IN')}</strong>
+          <span class="text-[11px] text-slate-600 dark:text-zinc-400">
+            ${t('tracker_sla')}: <strong class="text-amber-800 dark:text-amber-400 font-mono tabular-nums">${new Date(g.slaDeadline).toLocaleDateString('en-IN')}</strong>
           </span>
         </div>
       </div>
 
       <!-- 5-Stage Visual Redressal Lifecycle Tracker -->
-      <div class="space-y-4 py-2">
+      <ol class="space-y-4 py-2" aria-label="Grievance lifecycle stages">
         ${LIFECYCLE_STAGES.map((s, idx) => {
           const isDone = idx < currentStageIndex;
           const isCurrent = idx === currentStageIndex;
           const historyItem = g.timeline.find(t => t.stage === s.key);
 
           return `
-            <div class="stepper-node ${isDone ? 'completed' : (isCurrent ? 'current' : '')}">
-              <div class="stepper-line"></div>
-              <div class="stepper-circle">
+            <li class="stepper-node ${isDone ? 'completed' : (isCurrent ? 'current' : '')}" ${isCurrent ? 'aria-current="step"' : ''}>
+              <div class="stepper-line" aria-hidden="true"></div>
+              <div class="stepper-circle" aria-hidden="true">
                 ${isDone ? '✓' : (idx + 1)}
               </div>
               <div class="pt-0.5 space-y-0.5 flex-1">
-                <div class="flex items-center justify-between">
-                  <h4 class="font-black text-sm">${state.language === 'hi' ? s.hi : s.label}</h4>
-                  ${historyItem ? `<span class="text-[10px] text-slate-400 font-mono">${new Date(historyItem.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>` : ''}
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="font-bold text-sm">${state.language === 'hi' ? s.hi : s.label}</h3>
+                  ${historyItem ? `<span class="text-[11px] text-slate-600 dark:text-zinc-400 font-mono tabular-nums">${new Date(historyItem.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>` : ''}
                 </div>
-                <p class="text-xs text-slate-500 dark:text-zinc-400">
+                <p class="text-xs text-slate-600 dark:text-zinc-400">
                   ${historyItem ? escapeHtml(historyItem.note) : (isCurrent ? 'Under active review by the UDSC Students\' Union redressing panel.' : 'Pending progression.')}
                 </p>
               </div>
-            </div>
+            </li>
           `;
         }).join('')}
-      </div>
+      </ol>
 
       <!-- Official Union Action Notes -->
-      <div class="p-4 rounded-xl civic-well space-y-2">
-        <h4 class="text-xs font-black uppercase text-amber-700 dark:text-amber-400 tracking-wider">${t('tracker_official_log')}</h4>
-        <p class="text-xs">
+      <div class="p-4 rounded-xl civic-well space-y-1.5">
+        <h3 class="text-xs font-bold uppercase text-amber-800 dark:text-amber-400 tracking-wider">${t('tracker_official_log')}</h3>
+        <p class="text-xs text-slate-800 dark:text-zinc-200 leading-relaxed">
           ${g.assignedOfficer ? `Liaison Officer: <strong>${escapeHtml(g.assignedOfficer)}</strong> • ` : ''}
           ${escapeHtml(g.timeline.slice(-1)[0]?.note || t('tracker_no_notes'))}
         </p>
@@ -1655,7 +1760,7 @@ function renderTicketDetails(g) {
 
       <!-- DPDP Section 12 Right to Erasure Action -->
       <div class="pt-2 flex justify-end">
-        <button type="button" onclick="exerciseRightToErasure('${escapeHtml(g.ticketId)}')" class="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-1.5">
+        <button type="button" onclick="exerciseRightToErasure('${escapeHtml(g.ticketId)}')" class="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 inline-flex items-center gap-1.5 transition">
           ${iconSvg('trash', 'w-3.5 h-3.5')}
           <span>${t('tracker_erasure_btn')}</span>
         </button>
@@ -1696,25 +1801,25 @@ function renderPublicTelemetry() {
               ${t('telemetry_badge')}
             </span>
             <h1 class="text-xl sm:text-2xl font-bold mt-2">${t('telemetry_heading')}</h1>
-            <p class="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 max-w-2xl mt-1 leading-relaxed">
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 max-w-2xl mt-1 leading-relaxed">
               ${t('telemetry_sub')}
             </p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
-          <div class="p-3.5 civic-well rounded-lg">
-            <span class="text-xs text-slate-500 dark:text-zinc-400 font-semibold">${t('telemetry_total')}</span>
-            <p class="text-2xl font-bold mt-1 text-slate-900 dark:text-white">${total}</p>
+          <div class="p-4 civic-well rounded-xl">
+            <span class="text-xs text-slate-600 dark:text-zinc-400 font-semibold">${t('telemetry_total')}</span>
+            <p class="text-2xl font-bold mt-1 text-slate-900 dark:text-white tabular-nums">${total}</p>
           </div>
-          <div class="p-3.5 civic-well rounded-lg">
-            <span class="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">${t('telemetry_resolved')}</span>
-            <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">${resolved}</p>
+          <div class="p-4 civic-well rounded-xl">
+            <span class="text-xs text-emerald-800 dark:text-emerald-400 font-semibold">${t('telemetry_resolved')}</span>
+            <p class="text-2xl font-bold text-emerald-800 dark:text-emerald-400 mt-1 tabular-nums">${resolved}</p>
           </div>
-          <div class="p-3.5 civic-well rounded-lg">
-            <span class="text-xs text-slate-500 dark:text-zinc-400 font-semibold">${t('telemetry_status')}</span>
-            <p class="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mt-2 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <div class="p-4 civic-well rounded-xl">
+            <span class="text-xs text-slate-600 dark:text-zinc-400 font-semibold">${t('telemetry_status')}</span>
+            <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-400 mt-2 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400" aria-hidden="true"></span>
               <span>${t('telemetry_live')}</span>
             </p>
           </div>
@@ -1725,31 +1830,31 @@ function renderPublicTelemetry() {
 
       <div class="civic-card space-y-4">
         <div>
-          <h3 class="text-base font-bold">${t('telemetry_dept_title')}</h3>
-          <p class="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">${t('telemetry_dept_sub')}</p>
+          <h2 class="text-base font-bold">${t('telemetry_dept_title')}</h2>
+          <p class="text-xs text-slate-600 dark:text-zinc-400 mt-0.5">${t('telemetry_dept_sub')}</p>
         </div>
 
         ${deptList.length > 0 ? `
-          <div class="space-y-3.5 pt-2">
+          <div class="space-y-4 pt-2">
             ${deptList.map(d => `
               <div>
-                <div class="flex items-center justify-between text-xs font-semibold mb-1.5">
-                  <span class="text-slate-800 dark:text-zinc-200">${escapeHtml(d.name)} (${d.count} ${d.count === 1 ? 'case' : 'cases'})</span>
-                  <span class="text-emerald-700 dark:text-emerald-400">${d.pct}% ${t('telemetry_in_sla')}</span>
+                <div class="flex items-center justify-between text-xs font-semibold mb-1.5 gap-2">
+                  <span class="text-slate-900 dark:text-zinc-200">${escapeHtml(d.name)} (${d.count} ${d.count === 1 ? 'case' : 'cases'})</span>
+                  <span class="text-emerald-800 dark:text-emerald-400 tabular-nums shrink-0">${d.pct}% ${t('telemetry_in_sla')}</span>
                 </div>
-                <div class="w-full h-2 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                  <div class="h-full bg-emerald-600 rounded-full" style="width: ${d.pct}%"></div>
+                <div class="w-full h-2.5 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow="${d.pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${escapeHtml(d.name)} resolution rate">
+                  <div class="h-full bg-emerald-700 dark:bg-emerald-500 rounded-full transition-all" style="width: ${d.pct}%"></div>
                 </div>
               </div>
             `).join('')}
           </div>
         ` : `
-          <div class="text-center py-8 civic-well rounded-lg space-y-2">
-            <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center justify-center mx-auto">
+          <div class="text-center py-8 civic-well rounded-xl space-y-2">
+            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 flex items-center justify-center mx-auto">
               ${iconSvg('chart', 'w-4 h-4')}
             </div>
-            <h4 class="font-semibold text-sm">${t('telemetry_zero_title')}</h4>
-            <p class="text-xs text-slate-500 dark:text-zinc-400 max-w-md mx-auto">
+            <h3 class="font-semibold text-sm">${t('telemetry_zero_title')}</h3>
+            <p class="text-xs text-slate-600 dark:text-zinc-400 max-w-md mx-auto">
               ${t('telemetry_zero_desc')}
             </p>
           </div>
@@ -1772,40 +1877,40 @@ function renderStudentRights() {
         <span class="badge badge-submitted text-[10px]">
           ${t('rights_badge')}
         </span>
-        <h2 class="text-xl sm:text-2xl font-bold">${t('rights_heading')}</h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 leading-relaxed">${t('rights_sub')}</p>
+        <h1 class="text-xl sm:text-2xl font-bold">${t('rights_heading')}</h1>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">${t('rights_sub')}</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="civic-card space-y-1.5">
-          <h3 class="font-bold text-sm text-slate-900 dark:text-amber-400">${t('sec_6_title')}</h3>
-          <p class="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">${t('sec_6_desc')}</p>
+          <h2 class="font-bold text-sm text-slate-900 dark:text-amber-400">${t('sec_6_title')}</h2>
+          <p class="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed">${t('sec_6_desc')}</p>
         </div>
 
         <div class="civic-card space-y-1.5">
-          <h3 class="font-bold text-sm text-slate-900 dark:text-amber-400">${t('sec_8_title')}</h3>
-          <p class="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">${t('sec_8_desc')}</p>
+          <h2 class="font-bold text-sm text-slate-900 dark:text-amber-400">${t('sec_8_title')}</h2>
+          <p class="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed">${t('sec_8_desc')}</p>
         </div>
 
         <div class="civic-card space-y-1.5">
-          <h3 class="font-bold text-sm text-slate-900 dark:text-amber-400">${t('sec_12_title')}</h3>
-          <p class="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">${t('sec_12_desc')}</p>
+          <h2 class="font-bold text-sm text-slate-900 dark:text-amber-400">${t('sec_12_title')}</h2>
+          <p class="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed">${t('sec_12_desc')}</p>
         </div>
 
         <div class="civic-card space-y-1.5">
-          <h3 class="font-bold text-sm text-slate-900 dark:text-amber-400">${t('sec_13_title')}</h3>
-          <p class="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">${t('sec_13_desc')}</p>
+          <h2 class="font-bold text-sm text-slate-900 dark:text-amber-400">${t('sec_13_title')}</h2>
+          <p class="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed">${t('sec_13_desc')}</p>
         </div>
       </div>
 
       <div class="civic-card civic-well space-y-1.5 text-xs">
-        <h4 class="font-bold uppercase text-[11px] tracking-wider text-amber-700 dark:text-amber-400">
+        <h2 class="font-bold uppercase text-[11px] tracking-wider text-amber-800 dark:text-amber-400">
           ${t('rights_contact_box_title')}
-        </h4>
+        </h2>
         <p class="font-semibold text-slate-900 dark:text-white">${t('rights_office')}</p>
-        <p class="text-slate-500 dark:text-zinc-400">${t('rights_address')}</p>
-        <p class="text-slate-500 dark:text-zinc-400 pt-1">
-          ${t('rights_email_label')} <a href="mailto:studentsunion@south.du.ac.in" class="text-amber-700 dark:text-amber-400 font-semibold underline font-mono">studentsunion@south.du.ac.in</a>
+        <p class="text-slate-600 dark:text-zinc-400">${t('rights_address')}</p>
+        <p class="text-slate-600 dark:text-zinc-400 pt-1">
+          ${t('rights_email_label')} <a href="mailto:studentsunion@south.du.ac.in" class="text-amber-800 dark:text-amber-400 font-semibold underline font-mono">studentsunion@south.du.ac.in</a>
         </p>
       </div>
 
@@ -2017,6 +2122,7 @@ window.copyToClipboard = function(text) {
     navigator.clipboard.writeText(text).catch(() => {});
   }
   state.copiedToken = text;
+  showToast(state.language === 'hi' ? `टोकन कॉपी किया गया: ${text}` : `Copied tracking token: ${text}`);
   if (state.lastSubmittedGrievance && state.lastSubmittedGrievance.trackToken === text) {
     const main = document.querySelector('main');
     if (main) main.innerHTML = renderSuccessScreen(state.lastSubmittedGrievance);
@@ -2107,34 +2213,82 @@ window.handleTrackerSearch = async function(e) {
   renderApp();
 };
 
+function renderErasureConfirmDialog(ticketId) {
+  const isHi = state.language === 'hi';
+  return `
+    <div class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-labelledby="erasureDialogTitle" aria-describedby="erasureDialogDesc" onclick="if (event.target === this) closeErasureDialog()">
+      <div class="civic-card max-w-md w-full space-y-4 shadow-2xl border border-rose-500/30">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-10 h-10 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 flex items-center justify-center flex-shrink-0">
+              ${iconSvg('alert', 'w-5 h-5')}
+            </span>
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 block">DPDP Act 2023 • Section 12</span>
+              <h2 id="erasureDialogTitle" class="text-base font-bold">
+                ${isHi ? 'डेटा मिटाने का अधिकार (धारा 12)' : 'Exercise Right to Erasure'}
+              </h2>
+            </div>
+          </div>
+          <button type="button" onclick="closeErasureDialog()" aria-label="${isHi ? 'बंद करें' : 'Close dialog'}" class="min-w-[40px] min-h-[40px] rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 flex items-center justify-center text-slate-600 dark:text-zinc-400 font-bold">
+            ✕
+          </button>
+        </div>
+        <p id="erasureDialogDesc" class="text-xs sm:text-sm text-slate-700 dark:text-zinc-300 leading-relaxed">
+          ${isHi
+            ? 'क्या आप इस शिकायत को वापस लेकर अपना व्यक्तिगत डेटा स्थायी रूप से मिटाना चाहते हैं? यह प्रक्रिया अपरिवर्तनीय है।'
+            : 'Are you sure you want to withdraw this grievance and permanently scrub all personal identifiers? This statutory action cannot be undone.'}
+        </p>
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" onclick="closeErasureDialog()" class="btn btn-secondary btn-sm">
+            ${isHi ? 'रद्द करें' : 'Cancel'}
+          </button>
+          <button type="button" onclick="confirmRightToErasure('${escapeHtml(ticketId)}')" class="btn btn-danger btn-sm">
+            ${iconSvg('trash', 'w-4 h-4')}
+            <span>${isHi ? 'स्थायी रूप से मिटाएं' : 'Erase My Data'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 window.exerciseRightToErasure = function(ticketId) {
-  const confirmAction = confirm(
-    state.language === 'hi' 
-      ? "⚠️ DPDP अधिनियम 2023 — डेटा मिटाने का अधिकार (धारा 12)\n\nक्या आप इस शिकायत को वापस लेकर अपना व्यक्तिगत डेटा स्थायी रूप से मिटाना चाहते हैं?\nयह प्रक्रिया अपरिवर्तनीय है।"
-      : "⚠️ DPDP ACT 2023 — RIGHT TO ERASURE (SECTION 12)\n\nAre you sure you want to withdraw this grievance and permanently erase your personal data?\nThis action is irrevocable."
-  );
-
-  if (confirmAction) {
-    repo.update(ticketId, g => {
-      g.status = 'RESOLVED';
-      g.studentName = '[ERASED_UNDER_DPDP_SEC_12]';
-      g.studentEmail = null;
-      g.studentPhone = null;
-      g.timeline.push({
-        stage: 'RESOLVED',
-        timestamp: new Date().toISOString(),
-        note: state.language === 'hi' ? 'DPDP कानून 2023 की धारा 12 के तहत डेटा स्थायी रूप से मिटाया गया।' : 'Complainant exercised Section 12 Right to Erasure. Personal records permanently scrubbed.'
-      });
-      return g;
-    });
-
-    state.activeGrievance = repo.getAll().find(item => item.ticketId === ticketId);
-    renderApp();
-    alert(state.language === 'hi' 
-      ? "✓ आपका व्यक्तिगत डेटा धारा 12 के तहत स्थायी रूप से मिटा दिया गया है।"
-      : "✓ Your personal data has been permanently erased under DPDP Section 12.");
-  }
+  state.erasureConfirmTicketId = ticketId;
+  renderApp();
 };
+
+window.closeErasureDialog = function() {
+  state.erasureConfirmTicketId = null;
+  renderApp();
+};
+
+window.confirmRightToErasure = function(ticketId) {
+  repo.update(ticketId, g => {
+    g.status = 'RESOLVED';
+    g.studentName = '[ERASED_UNDER_DPDP_SEC_12]';
+    g.studentEmail = null;
+    g.studentPhone = null;
+    g.timeline.push({
+      stage: 'RESOLVED',
+      timestamp: new Date().toISOString(),
+      note: state.language === 'hi' ? 'DPDP कानून 2023 की धारा 12 के तहत डेटा स्थायी रूप से मिटाया गया।' : 'Complainant exercised Section 12 Right to Erasure. Personal records permanently scrubbed.'
+    });
+    return g;
+  });
+
+  state.erasureConfirmTicketId = null;
+  state.activeGrievance = repo.getAll().find(item => item.ticketId === ticketId);
+  showToast(state.language === 'hi'
+    ? 'धारा 12 के तहत आपका व्यक्तिगत डेटा स्थायी रूप से मिटा दिया गया है।'
+    : 'Personal identifiers permanently erased under DPDP Section 12.');
+};
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.erasureConfirmTicketId) {
+    closeErasureDialog();
+  }
+});
 
 window.resetWizard = function() {
   state.wizardStep = 1;

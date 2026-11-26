@@ -11,7 +11,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -20,7 +20,8 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
           }
         }
@@ -29,19 +30,19 @@
   </script>
 
   <!-- High-Contrast Civic Stylesheet -->
-  <link rel="stylesheet" href="./styles.css?v=5.7.1" />
+  <link rel="stylesheet" href="./styles.css?v=6.1.0" />
 
   <!-- Firebase App & Auth SDK (v10 compat) for Real Google Identity OAuth -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 </head>
-<body class="antialiased selection:bg-amber-600 selection:text-white bg-slate-950 text-slate-100 min-h-screen">
+<body class="antialiased selection:bg-amber-600 selection:text-white bg-[#0f0f11] text-zinc-100 min-h-screen">
 
   <!-- Admin Root Container -->
   <div id="adminRoot"></div>
 
   <!-- Admin Application Script with Cache-Buster -->
-  <script src="./admin.js?v=5.7.1"></script>
+  <script src="./admin.js?v=6.1.0"></script>
 
 </body>
 </html>

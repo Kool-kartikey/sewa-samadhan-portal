@@ -834,35 +834,37 @@ function renderAdminSignIn(root) {
   const lockout = adminRepo.getLockoutStatus();
 
   root.innerHTML = `
+    <a href="#adminMain" class="skip-link">Skip to sign-in</a>
+
     <!-- Top Authority Ribbon -->
-    <header class="bg-slate-900 border-b-2 border-amber-500/40 text-white shadow-lg sticky top-0 z-50">
+    <header class="bg-[#0f0f11]/90 backdrop-blur-md border-b border-white/10 text-white shadow-sm sticky top-0 z-50">
       <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 flex-shrink-0 brand-crest-box rounded-xl p-1 shadow-md">
+          <div class="w-9 h-9 flex-shrink-0 brand-crest-box rounded-xl p-1 shadow-md">
             ${getTrustCubeSvg("w-full h-full")}
           </div>
           <div>
-            <span class="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-1.5">
+            <span class="text-sm sm:text-base font-extrabold tracking-tight text-white flex items-center gap-1.5 font-display">
               S.A.M.A.D.H.A.N
-              <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold">
+              <span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono font-bold">
                 GATEKEEPER
               </span>
             </span>
-            <p class="text-[10px] text-slate-400">A Project S.E.W.A. Initiative • UDSC Students' Union</p>
+            <p class="text-[11px] text-zinc-400">A Project S.E.W.A. Initiative • UDSC Students' Union</p>
           </div>
         </div>
-        <a href="/index.html" class="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 border border-amber-500/30 transition hover:border-amber-400 shadow-sm">
+        <a href="/index.html" class="min-h-[40px] text-xs font-semibold text-amber-300 hover:text-amber-200 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-white/10 transition hover:border-amber-400/50">
           🌐 <span>Public Portal</span>
         </a>
       </div>
     </header>
 
     <!-- Main Sign-In Center -->
-    <main class="min-h-[calc(100vh-65px)] flex items-center justify-center p-4 sm:p-6 bg-radial from-slate-900 via-slate-950 to-black">
-      <div class="w-full max-w-md bg-slate-900/95 border-2 border-amber-500 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-6 backdrop-blur-md relative overflow-hidden">
+    <main id="adminMain" tabindex="-1" class="min-h-[calc(100vh-65px)] flex items-center justify-center p-4 sm:p-6 bg-[#0f0f11]">
+      <div class="w-full max-w-md bg-zinc-900/95 border border-white/10 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-6 backdrop-blur-md relative overflow-hidden">
         
         <!-- Ambient Top Accent Line -->
-        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600"></div>
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600"></div>
 
         <!-- Crest & Title Header -->
         <div class="text-center space-y-2.5 pt-1">
@@ -1096,81 +1098,83 @@ function renderAdminCockpit(root, session) {
   const hasLiveFirebaseUser = Boolean(authInstance && authInstance.currentUser && (authInstance.currentUser.email || '').toLowerCase() === session.email);
 
   root.innerHTML = `
+    <a href="#adminCockpitMain" class="skip-link">Skip to dashboard</a>
+
     <!-- Top Executive Command Header -->
-    <header class="bg-slate-900 border-b-2 border-white text-white sticky top-0 z-40 shadow-xl">
+    <header class="bg-[#0f0f11]/90 backdrop-blur-md border-b border-white/10 text-white sticky top-0 z-40 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
         
         <!-- Left: Brand Crest & Title -->
         <div class="flex items-center gap-3">
-          <div class="brand-crest-box w-10 h-10 rounded-xl p-1.5 flex items-center justify-center shadow-lg flex-shrink-0 border-2 border-amber-400">
+          <div class="brand-crest-box w-10 h-10 rounded-xl p-1.5 flex items-center justify-center shadow-md flex-shrink-0 border border-amber-400/60">
             ${getTrustCubeSvg("w-full h-full drop-shadow-sm")}
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-lg sm:text-xl font-black tracking-tight text-white">UNION EXECUTIVE COCKPIT</span>
-              <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white font-display">UNION EXECUTIVE COCKPIT</h1>
+              <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
                 OFFICIAL DESK
               </span>
             </div>
-            <p class="text-[11px] text-slate-300">
+            <p class="text-[11px] text-zinc-400">
               A Project S.E.W.A. Initiative • UDSC Students' Union
             </p>
           </div>
         </div>
 
         <!-- Right: Clean Role-Scoped Action Toolbar -->
-        <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+        <div class="flex items-center gap-2 flex-wrap">
           
           <!-- Active Executive Identity Pill -->
-          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 border-2 border-slate-700 text-xs">
-            <span class="text-amber-400 font-bold">👤 ${escapeHtml(displayName)}</span>
-            <span class="text-[10px] text-emerald-400 font-mono font-bold">(${sessionRemainingMin}m left)</span>
+          <div class="flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-full bg-zinc-900 border border-white/10 text-xs">
+            <span class="text-amber-400 font-semibold">${escapeHtml(displayName)}</span>
+            <span class="text-[10px] text-emerald-400 font-mono font-bold tabular-nums">(${sessionRemainingMin}m)</span>
           </div>
 
           <!-- Workstation Security Key -->
-          <button onclick="openPasscodeModal()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border-2 border-amber-500/50 flex items-center gap-1.5 transition shadow-sm" title="Configure quick sign-in passkey for this browser">
+          <button type="button" onclick="openPasscodeModal()" class="min-h-[38px] text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 transition" title="Configure quick sign-in passkey for this browser">
             🔑 <span>Security Key</span>
           </button>
 
           <!-- Live Sync with Google Sheet Button -->
-          <button onclick="handleManualSheetSync(event)" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-400 flex items-center gap-1.5 transition shadow-md hover:scale-102" title="Fetch latest grievance submissions from Google Sheet">
-            <span class="inline-block w-2 h-2 rounded-full bg-white animate-pulse"></span>
-            <span>🔄 Live Sync (${total})</span>
+          <button type="button" onclick="handleManualSheetSync(event)" class="min-h-[38px] text-xs font-bold px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 transition shadow-sm" title="Fetch latest grievance submissions from Google Sheet">
+            <span class="inline-block w-2 h-2 rounded-full bg-white animate-pulse" aria-hidden="true"></span>
+            <span>Live Sync (${total})</span>
           </button>
 
           <!-- Public View-Only Google Sheet Ledger -->
-          <a href="${getGoogleSheetViewUrl()}" target="_blank" rel="noopener noreferrer" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-2 border-emerald-500/50 flex items-center gap-1.5 transition shadow-sm" title="Open public read-only transparency spreadsheet">
+          <a href="${getGoogleSheetViewUrl()}" target="_blank" rel="noopener noreferrer" class="min-h-[38px] text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-950/60 hover:bg-emerald-900/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 transition" title="Open public read-only transparency spreadsheet">
             📊 <span>Public Sheet</span>
           </a>
 
           <!-- Export CSV -->
-          <button onclick="exportGrievancesCSV()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border-2 border-slate-700 flex items-center gap-1.5 transition shadow-sm" title="Download complaints register as CSV">
+          <button type="button" onclick="exportGrievancesCSV()" class="min-h-[38px] text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/10 flex items-center gap-1.5 transition" title="Download complaints register as CSV">
             📥 <span>Export CSV</span>
           </button>
 
           ${isArchitect ? `
           <!-- System Architect Only: Sheet Webhook Config, Access Control & Succession -->
-          <button onclick="openSheetModal()" class="text-xs font-black px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 transition shadow-sm" title="Configure Google Sheet & Apps Script Webhook URLs">
+          <button type="button" onclick="openSheetModal()" class="min-h-[38px] text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 transition" title="Configure Google Sheet & Apps Script Webhook URLs">
             ⚙️ <span>Sheet Sync</span>
           </button>
 
-          <button onclick="openWhitelistModal()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border-2 border-slate-700 flex items-center gap-1.5 transition shadow-sm" title="Manage authorized executive accounts">
+          <button type="button" onclick="openWhitelistModal()" class="min-h-[38px] text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/10 flex items-center gap-1.5 transition" title="Manage authorized executive accounts">
             👥 <span>Access (${whitelistedEmails.length})</span>
           </button>
 
-          <button onclick="openSuccessionModal()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white border-2 border-amber-400/50 shadow-md transition" title="Execute formal executive handover protocol">
+          <button type="button" onclick="openSuccessionModal()" class="min-h-[38px] text-xs font-bold px-3.5 py-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-zinc-950 shadow-sm transition" title="Execute formal executive handover protocol">
             🤝 <span>Handover</span>
           </button>
           ` : ''}
 
           <!-- Public Student Portal Link -->
-          <a href="/index.html" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-2 border-slate-700 flex items-center gap-1 transition shadow-sm">
+          <a href="/index.html" class="min-h-[38px] text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 flex items-center gap-1 transition">
             🌐 <span>Public Portal</span>
           </a>
 
           <!-- Sign Out Button -->
-          <button onclick="handleAdminSignOut()" class="text-xs font-black px-3 py-1.5 rounded-xl bg-rose-950 hover:bg-rose-900 text-rose-300 border-2 border-rose-600/80 flex items-center gap-1 transition shadow-sm">
-            🚪 <span>Sign Out</span>
+          <button type="button" onclick="handleAdminSignOut()" class="min-h-[38px] text-xs font-semibold px-3 py-1.5 rounded-full bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-500/40 flex items-center gap-1 transition">
+            <span>Sign Out</span>
           </button>
         </div>
 
@@ -1178,69 +1182,69 @@ function renderAdminCockpit(root, session) {
     </header>
 
     <!-- Main Admin Workspace -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+    <main id="adminCockpitMain" tabindex="-1" class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 bg-[#0f0f11]">
       
       <!-- Executive Bearer Banner -->
-      <div class="civic-card bg-slate-900 border-2 border-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+      <div class="bg-zinc-900/95 border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
         <div class="flex items-center gap-3.5">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-2xl shadow-md border border-amber-300/40">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl">
             🏛️
           </div>
           <div>
             <div class="flex items-center gap-2 flex-wrap">
-              <h2 class="text-lg font-black text-white">${escapeHtml(displayName)}</h2>
-              <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              <h2 class="text-lg font-bold text-white font-display">${escapeHtml(displayName)}</h2>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
                 ${escapeHtml(displayDesignation)}
               </span>
             </div>
-            <p class="text-xs text-slate-300 mt-1">
+            <p class="text-xs text-zinc-400 mt-1">
               Signed in as <strong class="text-amber-400 font-mono">${escapeHtml(session.email)}</strong> • South Delhi Campus Grievance Cell
             </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2.5 text-xs font-bold text-slate-300 flex-wrap">
-          <span class="px-2.5 py-1 rounded-lg ${hasLiveFirebaseUser ? 'bg-emerald-950/70 border border-emerald-500/50 text-emerald-300' : 'bg-amber-950/60 border border-amber-500/40 text-amber-300'}" title="${hasLiveFirebaseUser ? 'Verified Google session active — status changes sync directly to Public Sheet' : 'Local passkey session active — re-sign via Google to push live sheet status updates'}">
+        <div class="flex items-center gap-2 text-xs font-semibold text-zinc-300 flex-wrap">
+          <span class="px-3 py-1 rounded-full ${hasLiveFirebaseUser ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300' : 'bg-amber-500/10 border border-amber-500/30 text-amber-300'}" title="${hasLiveFirebaseUser ? 'Verified Google session active — status changes sync directly to Public Sheet' : 'Local passkey session active — re-sign via Google to push live sheet status updates'}">
             ${hasLiveFirebaseUser ? '✓ Live Sheet Sync Ready' : '⚡ Local Session (Sign in with Google for Live Updates)'}
           </span>
-          <span class="px-2.5 py-1 rounded-lg bg-emerald-950/70 border border-emerald-500/50 text-emerald-300">
+          <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
             ✓ DPDP Act 2023 Compliant
           </span>
         </div>
       </div>
 
       ${adminState.syncBanner ? `
-        <div class="p-3.5 rounded-xl border-2 text-xs flex items-center justify-between gap-3 ${adminState.syncBanner.type === 'success' ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200' : (adminState.syncBanner.type === 'warning' ? 'bg-amber-950/80 border-amber-500 text-amber-200' : 'bg-slate-900 border-slate-700 text-slate-200')}">
+        <div role="status" aria-live="polite" class="p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 ${adminState.syncBanner.type === 'success' ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-200' : (adminState.syncBanner.type === 'warning' ? 'bg-amber-950/70 border-amber-500/40 text-amber-200' : 'bg-zinc-900 border-white/10 text-zinc-200')}">
           <span>${escapeHtml(adminState.syncBanner.message)}</span>
-          <button onclick="dismissSyncBanner()" class="font-bold px-2 py-0.5 rounded hover:bg-white/10">✕</button>
+          <button type="button" onclick="dismissSyncBanner()" aria-label="Dismiss notification" class="min-w-[32px] min-h-[32px] font-bold px-2 py-0.5 rounded-lg hover:bg-white/10">✕</button>
         </div>
       ` : ''}
 
       ${!adminState.guideDismissed ? `
         <!-- Quick Executive Workflow Guide -->
-        <div class="civic-card p-4 bg-slate-900/90 border border-amber-500/40 shadow-md">
+        <div class="p-4 sm:p-5 rounded-2xl bg-zinc-900/90 border border-amber-500/25 shadow-sm">
           <div class="flex items-start justify-between gap-3">
-            <div class="space-y-2 w-full">
+            <div class="space-y-2.5 w-full">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-black uppercase tracking-wider text-amber-400">Executive Quick Guide</span>
-                <span class="text-[11px] text-slate-400">How grievance review and status updates work</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Executive Quick Guide</span>
+                <span class="text-[11px] text-zinc-400">How grievance review and status updates work</span>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-                  <strong class="text-white block">1. Filter or Search Cases</strong>
-                  <span class="text-slate-400">Use priority tabs or search by token (e.g. UDSC-2026-HOSTEL-421), department, or title.</span>
+                <div class="p-3 rounded-xl bg-zinc-950/70 border border-white/5">
+                  <strong class="text-white block mb-0.5">1. Filter or Search Cases</strong>
+                  <span class="text-zinc-400">Use priority chips or search by token (e.g. UDSC-2026-HOSTEL-421), department, or title.</span>
                 </div>
-                <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-                  <strong class="text-white block">2. Inspect Complaint Details</strong>
-                  <span class="text-slate-400">Click <em>Inspect &amp; Update</em> to read the testimony and SLA target. Anonymous IDs stay protected.</span>
+                <div class="p-3 rounded-xl bg-zinc-950/70 border border-white/5">
+                  <strong class="text-white block mb-0.5">2. Inspect Complaint Details</strong>
+                  <span class="text-zinc-400">Click <em>Inspect &amp; Update</em> to read the testimony and SLA target. Anonymous IDs stay protected.</span>
                 </div>
-                <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-                  <strong class="text-white block">3. Update Status &amp; Add Note</strong>
-                  <span class="text-slate-400">Select the new lifecycle stage and record a short action note. Updates publish to the live tracker.</span>
+                <div class="p-3 rounded-xl bg-zinc-950/70 border border-white/5">
+                  <strong class="text-white block mb-0.5">3. Update Status &amp; Add Note</strong>
+                  <span class="text-zinc-400">Select the new lifecycle stage and record a short action note. Updates publish to the live tracker.</span>
                 </div>
               </div>
             </div>
-            <button onclick="dismissAdminGuide()" class="text-slate-400 hover:text-white text-xs font-bold px-2 py-1 rounded hover:bg-slate-800" title="Hide guide">Hide ✕</button>
+            <button type="button" onclick="dismissAdminGuide()" class="min-h-[36px] text-zinc-400 hover:text-white text-xs font-semibold px-2.5 py-1 rounded-lg hover:bg-white/10 shrink-0" title="Hide guide">Hide ✕</button>
           </div>
         </div>
       ` : ''}
@@ -1249,112 +1253,124 @@ function renderAdminCockpit(root, session) {
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         <!-- Metric 1: Active Cases -->
-        <div class="civic-card p-4 sm:p-5 bg-slate-900 border-2 border-white shadow-lg space-y-1">
-          <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider">Active Caseload</span>
-          <p class="text-3xl sm:text-4xl font-black text-white leading-none my-1">${inProgress}</p>
-          <div class="flex items-center justify-between text-[11px] font-bold text-slate-300 pt-1 border-t border-slate-800">
-            <span>Total Received:</span>
-            <span class="font-mono text-amber-400">${total}</span>
+        <div class="p-4 sm:p-5 bg-zinc-900/95 border border-white/10 rounded-2xl space-y-1.5">
+          <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Active Caseload</span>
+          <p class="text-3xl sm:text-4xl font-extrabold text-white leading-none my-1 tabular-nums">${inProgress}</p>
+          <div class="flex items-center justify-between text-[11px] font-semibold text-zinc-400 pt-2 border-t border-white/10">
+            <span>Total Received</span>
+            <span class="font-mono text-amber-400 tabular-nums">${total}</span>
           </div>
         </div>
 
         <!-- Metric 2: Critical Urgent 24h -->
-        <div class="civic-card p-4 sm:p-5 bg-slate-900 border-2 border-white shadow-lg space-y-1">
-          <span class="text-[11px] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+        <div class="p-4 sm:p-5 bg-zinc-900/95 border border-rose-500/25 rounded-2xl space-y-1.5">
+          <span class="text-[11px] font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse" aria-hidden="true"></span>
             Critical Priority
           </span>
-          <p class="text-3xl sm:text-4xl font-black text-rose-500 leading-none my-1">${critical}</p>
-          <div class="flex items-center justify-between text-[11px] font-bold text-rose-300 pt-1 border-t border-slate-800">
-            <span>24-Hour SLA Target:</span>
-            <span>Immediate Action</span>
+          <p class="text-3xl sm:text-4xl font-extrabold text-rose-400 leading-none my-1 tabular-nums">${critical}</p>
+          <div class="flex items-center justify-between text-[11px] font-semibold text-rose-300/90 pt-2 border-t border-white/10">
+            <span>24h SLA Target</span>
+            <span>Immediate</span>
           </div>
         </div>
 
         <!-- Metric 3: Resolved by Union -->
-        <div class="civic-card p-4 sm:p-5 bg-slate-900 border-2 border-white shadow-lg space-y-1">
-          <span class="text-[11px] font-black text-emerald-400 uppercase tracking-wider">Resolved by Union</span>
-          <p class="text-3xl sm:text-4xl font-black text-emerald-400 leading-none my-1">${resolved}</p>
-          <div class="flex items-center justify-between text-[11px] font-bold text-emerald-300 pt-1 border-t border-slate-800">
-            <span>Resolution Rate:</span>
-            <span class="font-mono">${total > 0 ? Math.round((resolved / total) * 100) : 100}%</span>
+        <div class="p-4 sm:p-5 bg-zinc-900/95 border border-emerald-500/25 rounded-2xl space-y-1.5">
+          <span class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Resolved by Union</span>
+          <p class="text-3xl sm:text-4xl font-extrabold text-emerald-400 leading-none my-1 tabular-nums">${resolved}</p>
+          <div class="flex items-center justify-between text-[11px] font-semibold text-emerald-300/90 pt-2 border-t border-white/10">
+            <span>Resolution Rate</span>
+            <span class="font-mono tabular-nums">${total > 0 ? Math.round((resolved / total) * 100) : 100}%</span>
           </div>
         </div>
 
         <!-- Metric 4: Privacy & Whistleblower Shield -->
-        <div class="civic-card p-4 sm:p-5 bg-slate-900 border-2 border-white shadow-lg space-y-1">
-          <span class="text-[11px] font-black text-blue-400 uppercase tracking-wider">Privacy Safeguards</span>
-          <p class="text-3xl sm:text-4xl font-black text-blue-400 leading-none my-1">${anonymousCount}</p>
-          <div class="flex items-center justify-between text-[11px] font-bold text-slate-300 pt-1 border-t border-slate-800">
-            <span>Anonymous Complainants:</span>
-            <span class="text-blue-300 font-bold">100% Shielded</span>
+        <div class="p-4 sm:p-5 bg-zinc-900/95 border border-blue-500/25 rounded-2xl space-y-1.5">
+          <span class="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Privacy Safeguards</span>
+          <p class="text-3xl sm:text-4xl font-extrabold text-blue-400 leading-none my-1 tabular-nums">${anonymousCount}</p>
+          <div class="flex items-center justify-between text-[11px] font-semibold text-zinc-400 pt-2 border-t border-white/10">
+            <span>Anonymous</span>
+            <span class="text-blue-300 font-semibold">100% Shielded</span>
           </div>
         </div>
 
       </div>
 
-      <!-- Quick Filter Pills & Live Search Rail -->
-      <div class="civic-card p-4 bg-slate-900 border-2 border-white shadow-lg space-y-3">
+      <!-- YouTube-Style Quick Filter Chips & Search Bar -->
+      <div class="p-4 bg-zinc-900/95 border border-white/10 rounded-2xl space-y-3">
         
-        <!-- Row 1: Quick Filter Tabs -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+        <!-- Row 1: Quick Filter Chips -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter cases by status">
           <button 
+            type="button"
             onclick="setQuickFilter('ALL')" 
-            class="px-3 py-1.5 text-xs font-black rounded-lg transition border-2 ${adminState.filterQuick === 'ALL' ? 'bg-amber-500 text-black border-amber-400 shadow-sm' : 'bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500'}"
+            aria-pressed="${adminState.filterQuick === 'ALL'}"
+            class="chip-filter ${adminState.filterQuick === 'ALL' ? 'active-default' : ''}"
           >
             All Cases (${total})
           </button>
           <button 
+            type="button"
             onclick="setQuickFilter('URGENT')" 
-            class="px-3 py-1.5 text-xs font-black rounded-lg transition border-2 ${adminState.filterQuick === 'URGENT' ? 'bg-rose-500 text-white border-rose-400 shadow-sm' : 'bg-slate-950 text-rose-300 border-slate-700 hover:border-rose-500'}"
+            aria-pressed="${adminState.filterQuick === 'URGENT'}"
+            class="chip-filter ${adminState.filterQuick === 'URGENT' ? 'active-rose' : ''}"
           >
-            🔥 Urgent / Critical (${critical})
+            Critical (${critical})
           </button>
           <button 
+            type="button"
             onclick="setQuickFilter('IN_PROGRESS')" 
-            class="px-3 py-1.5 text-xs font-black rounded-lg transition border-2 ${adminState.filterQuick === 'IN_PROGRESS' ? 'bg-amber-500 text-black border-amber-400 shadow-sm' : 'bg-slate-950 text-amber-300 border-slate-700 hover:border-amber-500'}"
+            aria-pressed="${adminState.filterQuick === 'IN_PROGRESS'}"
+            class="chip-filter ${adminState.filterQuick === 'IN_PROGRESS' ? 'active-amber' : ''}"
           >
-            ⏳ In Review (${inProgress})
+            In Review (${inProgress})
           </button>
           <button 
+            type="button"
             onclick="setQuickFilter('RESOLVED')" 
-            class="px-3 py-1.5 text-xs font-black rounded-lg transition border-2 ${adminState.filterQuick === 'RESOLVED' ? 'bg-emerald-500 text-black border-emerald-400 shadow-sm' : 'bg-slate-950 text-emerald-300 border-slate-700 hover:border-emerald-500'}"
+            aria-pressed="${adminState.filterQuick === 'RESOLVED'}"
+            class="chip-filter ${adminState.filterQuick === 'RESOLVED' ? 'active-emerald' : ''}"
           >
-            ✅ Resolved (${resolved})
+            Resolved (${resolved})
           </button>
           <button 
+            type="button"
             onclick="setQuickFilter('ANONYMOUS')" 
-            class="px-3 py-1.5 text-xs font-black rounded-lg transition border-2 ${adminState.filterQuick === 'ANONYMOUS' ? 'bg-blue-500 text-white border-blue-400 shadow-sm' : 'bg-slate-950 text-blue-300 border-slate-700 hover:border-blue-500'}"
+            aria-pressed="${adminState.filterQuick === 'ANONYMOUS'}"
+            class="chip-filter ${adminState.filterQuick === 'ANONYMOUS' ? 'active-blue' : ''}"
           >
-            🛡️ Whistleblowers (${anonymousCount})
+            Whistleblowers (${anonymousCount})
           </button>
         </div>
 
         <!-- Row 2: Search & Dropdowns -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/10">
           
           <div class="relative flex-1 min-w-[240px]">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
+            <label for="adminSearchInput" class="sr-only">Search grievances</label>
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400 text-xs" aria-hidden="true">
               🔍
             </span>
             <input 
               type="text" 
+              id="adminSearchInput"
               placeholder="Search by Token, Department, Title, or Complainant..." 
               value="${adminState.searchQuery}"
               oninput="handleAdminSearch(this.value)"
-              class="form-input text-xs pl-8 bg-slate-950 border-2 border-slate-700 text-white w-full rounded-xl focus:border-amber-400" 
+              class="form-input text-sm pl-9 bg-zinc-950 border border-white/15 text-white w-full rounded-xl focus:border-amber-400" 
             />
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <select onchange="handleAdminFilterCategory(this.value)" class="form-select text-xs py-2 px-3 bg-slate-950 border-2 border-slate-700 text-white rounded-xl focus:border-amber-400">
+            <select aria-label="Filter by category" onchange="handleAdminFilterCategory(this.value)" class="form-select text-xs py-2 px-3 bg-zinc-950 border border-white/15 text-white rounded-xl focus:border-amber-400">
               <option value="ALL">All Categories (${Object.keys(CATEGORIES).length})</option>
               ${Object.values(CATEGORIES).map(c => `
                 <option value="${c.id}" ${adminState.filterCategory === c.id ? 'selected' : ''}>${c.icon} ${c.label}</option>
               `).join('')}
             </select>
 
-            <select onchange="handleAdminFilterStatus(this.value)" class="form-select text-xs py-2 px-3 bg-slate-950 border-2 border-slate-700 text-white rounded-xl focus:border-amber-400">
+            <select aria-label="Filter by lifecycle status" onchange="handleAdminFilterStatus(this.value)" class="form-select text-xs py-2 px-3 bg-zinc-950 border border-white/15 text-white rounded-xl focus:border-amber-400">
               <option value="ALL">All Statuses (${LIFECYCLE_STAGES.length})</option>
               ${LIFECYCLE_STAGES.map(s => `
                 <option value="${s.key}" ${adminState.filterStatus === s.key ? 'selected' : ''}>${s.label}</option>
@@ -1367,35 +1383,35 @@ function renderAdminCockpit(root, session) {
 
       <!-- Recurring Departmental Issues & Action Briefs Section -->
       ${dynamicClusters.length > 0 ? `
-        <div class="civic-card bg-slate-900 border-2 border-white p-4 sm:p-5 shadow-lg space-y-3">
+        <div class="p-4 sm:p-5 bg-zinc-900/95 border border-white/10 rounded-2xl space-y-3">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <div>
-              <h3 class="font-black text-sm text-white flex items-center gap-2">
+              <h2 class="font-bold text-sm text-white flex items-center gap-2">
                 <span>📋</span>
-                <span>Recurring Departmental Issues & Action Briefs</span>
-              </h3>
-              <p class="text-xs text-slate-400">
+                <span>Recurring Departmental Issues &amp; Action Briefs</span>
+              </h2>
+              <p class="text-xs text-zinc-400">
                 Departments with 2 or more registered grievances. Grouped to coordinate institutional representations.
               </p>
             </div>
-            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+            <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
               ${dynamicClusters.length} Systemic Issues Flagged
             </span>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             ${dynamicClusters.map(c => `
-              <div class="p-3.5 bg-slate-950 border-2 border-slate-700 rounded-xl space-y-1.5 hover:border-amber-400 transition shadow-sm">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-black text-amber-400">${escapeHtml(c.department)}</span>
-                  <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono">
+              <div class="p-3.5 bg-zinc-950/80 border border-white/10 rounded-xl space-y-1.5 hover:border-amber-400/50 transition">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold text-amber-400">${escapeHtml(c.department)}</span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 font-mono shrink-0">
                     ${c.count} Complaints
                   </span>
                 </div>
-                <p class="text-xs text-slate-300 leading-snug">
+                <p class="text-xs text-zinc-300 leading-snug">
                   ${escapeHtml(c.description)}
                 </p>
-                <button data-dept="${escapeHtml(c.department)}" onclick="handleAdminSearch(this.dataset.dept)" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 hover:underline pt-1 flex items-center gap-1">
+                <button type="button" data-dept="${escapeHtml(c.department)}" onclick="handleAdminSearch(this.dataset.dept)" class="min-h-[36px] text-[11px] font-semibold text-amber-400 hover:text-amber-300 hover:underline pt-1 flex items-center gap-1">
                   Filter Cases for this Department ➔
                 </button>
               </div>
@@ -1405,15 +1421,15 @@ function renderAdminCockpit(root, session) {
       ` : ''}
 
       <!-- Grievance Management Table & Mobile Cards -->
-      <div class="civic-card p-0 overflow-hidden bg-slate-900 border-2 border-white shadow-xl">
+      <div class="overflow-hidden bg-zinc-900/95 border border-white/10 rounded-2xl shadow-sm">
         
         <!-- Table Header Bar -->
-        <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
+        <div class="p-4 bg-zinc-950/60 border-b border-white/10 flex items-center justify-between flex-wrap gap-2">
           <div>
-            <h3 class="font-black text-sm text-white">Registered Student Grievances (${filtered.length})</h3>
-            <p class="text-xs text-slate-400">Real-time repository under UDSC Students' Union administrative oversight.</p>
+            <h2 class="font-bold text-sm text-white">Registered Student Grievances (${filtered.length})</h2>
+            <p class="text-xs text-zinc-400">Real-time repository under UDSC Students' Union administrative oversight.</p>
           </div>
-          <span class="text-xs text-slate-400">
+          <span class="text-xs text-zinc-400 tabular-nums">
             Showing <strong class="text-white">${filtered.length}</strong> of <strong class="text-white">${total}</strong> total cases
           </span>
         </div>
@@ -1543,8 +1559,8 @@ function renderTicketInspectionModal(ticketId) {
   if (!g) return '';
 
   return `
-    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-slate-900 border-2 border-white rounded-2xl max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto shadow-2xl text-left">
+    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Inspect Grievance Case" onclick="if (event.target === this) closeInspectionModal()">
+      <div class="bg-zinc-900 border border-white/15 rounded-2xl max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto shadow-2xl text-left">
         
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
@@ -1671,8 +1687,8 @@ function renderTicketInspectionModal(ticketId) {
 function renderPasscodeSettingsModal(email) {
   const hasExisting = Boolean(adminRepo.getMasterPasscodeHash(email));
   return `
-    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-slate-900 border-2 border-amber-500 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl text-left">
+    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Device Security Key" onclick="if (event.target === this) closePasscodeModal()">
+      <div class="bg-zinc-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl text-left">
         
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div class="flex items-center gap-2">
@@ -1744,8 +1760,8 @@ function renderPasscodeSettingsModal(email) {
 
 function renderWhitelistManagementModal(whitelistedEmails) {
   return `
-    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-slate-900 border-2 border-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl text-left">
+    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Executive Access Control" onclick="if (event.target === this) closeWhitelistModal()">
+      <div class="bg-zinc-900 border border-white/15 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl text-left">
         
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div class="flex items-center gap-2">
@@ -1832,8 +1848,8 @@ function renderWhitelistManagementModal(whitelistedEmails) {
 
 function renderSuccessionHandshakeModal(hs) {
   return `
-    <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-slate-900 border-2 border-amber-400 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl text-left max-h-[90vh] overflow-y-auto">
+    <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Dual-Custody Succession Protocol" onclick="if (event.target === this) closeSuccessionModal()">
+      <div class="bg-zinc-900 border border-amber-400/50 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl text-left max-h-[90vh] overflow-y-auto">
         
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div class="flex items-center gap-3">
@@ -1898,8 +1914,8 @@ function renderSuccessionHandshakeModal(hs) {
 
 function renderSheetConfigModal() {
   return `
-    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-slate-900 border-2 border-emerald-500 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl text-left">
+    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Public Transparency Ledger Configuration" onclick="if (event.target === this) closeSheetModal()">
+      <div class="bg-zinc-900 border border-emerald-500/40 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl text-left">
         
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div class="flex items-center gap-2">
@@ -2534,4 +2550,14 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }, 30000);
   }
+});
+
+// WCAG 2.2 Escape key dismissal for all Executive Cockpit modals
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (adminState.selectedTicket) closeInspectionModal();
+  else if (adminState.isPasscodeModalOpen) closePasscodeModal();
+  else if (adminState.isWhitelistModalOpen) closeWhitelistModal();
+  else if (adminState.isSheetModalOpen) closeSheetModal();
+  else if (adminState.activeHandshake) closeSuccessionModal();
 });

@@ -12,7 +12,7 @@
   <!-- High Legibility Civic Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS Play CDN (Optimized for instantaneous standalone execution) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -22,7 +22,8 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
           }
         }
@@ -31,7 +32,7 @@
   </script>
 
   <!-- High-Contrast Civic Stylesheet -->
-  <link rel="stylesheet" href="./styles.css?v=5.7.1" />
+  <link rel="stylesheet" href="./styles.css?v=6.1.0" />
 </head>
 <body class="antialiased selection:bg-amber-500 selection:text-black">
 
@@ -39,7 +40,7 @@
   <div id="root"></div>
 
   <!-- Core Application Script -->
-  <script src="./app.js?v=5.7.1"></script>
+  <script src="./app.js?v=6.1.0"></script>
 
 </body>
 </html>
