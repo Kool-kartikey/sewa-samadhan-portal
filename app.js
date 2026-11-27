@@ -1084,16 +1084,16 @@ function renderApp() {
 
     <!-- Clean Institutional Glass Header -->
     <header class="site-header sticky top-0 z-40">
-      <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-2">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-2 lg:gap-4">
         
-        <!-- Left: Brand Identity (min-w-0 prevents pushing controls off-screen on narrow phones) -->
-        <button type="button" onclick="navigateTab('register')" class="flex items-center gap-2 sm:gap-2.5 text-left cursor-pointer select-none bg-transparent border-0 p-1 -ml-1 rounded-xl min-h-[44px] min-w-0 flex-1">
+        <!-- Left: Brand Identity (min-w-0 on narrow screens, shrink-0 on desktop lg+ so full subtitle never truncates) -->
+        <button type="button" onclick="navigateTab('register')" class="flex items-center gap-2 sm:gap-2.5 text-left cursor-pointer select-none bg-transparent border-0 p-1 -ml-1 rounded-xl min-h-[44px] min-w-0 flex-1 lg:flex-none lg:shrink-0">
           <div class="brand-crest-box w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-1.5 flex items-center justify-center flex-shrink-0">
             ${getTrustCubeSvg("w-full h-full")}
           </div>
-          <div class="min-w-0 flex-1">
+          <div class="min-w-0 flex-1 lg:flex-none">
             <div class="flex items-center gap-1.5 sm:gap-2">
-              <span class="text-sm sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-none font-display truncate">
+              <span class="text-sm sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-none font-display truncate lg:overflow-visible">
                 ${t('brand_title')}
               </span>
               <span class="inline-flex text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-600/30 items-center gap-1 flex-shrink-0">
@@ -1101,9 +1101,9 @@ function renderApp() {
                 <span class="hidden sm:inline">${t('brand_status')}</span>
               </span>
             </div>
-            <p class="text-[10px] sm:text-[11px] text-slate-600 dark:text-zinc-400 font-medium mt-0.5 truncate whitespace-nowrap">
-              <span class="sm:hidden">${t('brand_sub_mobile')}</span>
-              <span class="hidden sm:inline">${t('brand_sub')}</span>
+            <p class="text-[10px] sm:text-[11px] text-slate-600 dark:text-zinc-400 font-medium mt-0.5 truncate lg:overflow-visible whitespace-nowrap">
+              <span class="sm:hidden md:inline lg:hidden">${t('brand_sub_mobile')}</span>
+              <span class="hidden sm:inline md:hidden lg:inline">${t('brand_sub')}</span>
             </p>
           </div>
         </button>
