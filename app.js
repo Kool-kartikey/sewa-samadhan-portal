@@ -41,7 +41,9 @@ function iconSvg(name, className = 'w-4 h-4') {
     mail: '<path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />',
     trash: '<path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />',
     lock: '<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />',
-    alert: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />'
+    alert: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />',
+    chat: '<path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />',
+    sparkles: '<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />'
   };
   return `<svg class="${className}" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" aria-hidden="true">${icons[name] || icons.file}</svg>`;
 }
@@ -223,7 +225,35 @@ const I18N = {
     role_joint_secretary: "Joint Secretary",
     role_councilor: "Central Councilor",
     footer_rights_reserved: "© 2026 Students' Union, South Delhi Campus (UDSC), University of Delhi.",
-    footer_iso: "ISO 10002:2018 Quality Standard"
+    footer_iso: "ISO 10002:2018 Quality Standard",
+
+    // Portal UI/UX Feedback & Feature Wishlist
+    feedback_fab_label: "Portal Feedback",
+    feedback_strip_badge: "Portal Improvement",
+    feedback_strip_title: "Rate S.A.M.A.D.H.A.N UI/UX & Suggest Features",
+    feedback_strip_sub: "Takes 15 seconds. Tell the Union team how the layout feels and what tools you want added.",
+    feedback_strip_btn: "Share Feedback",
+    feedback_badge: "Civic UX Survey • Project S.E.W.A.",
+    feedback_modal_title: "Portal UI/UX Feedback & Feature Requests",
+    feedback_modal_sub: "Help the UDSC Students' Union refine accessibility, mobile clarity, and citizen tools.",
+    feedback_privacy_notice: "Anonymous Usability Feedback: Please do not include your name, email, phone number, or private grievance specifics here. Entries log to the Portal_Feedback sheet tab.",
+    feedback_ui_label: "1. Interface & Visual Clarity (UI) — Scale 1 to 5",
+    feedback_ui_hint: "Readability, typography, contrast, and layout balance.",
+    feedback_ux_label: "2. Overall Portal Experience (UX) — Scale 1 to 5",
+    feedback_ux_hint: "Ease of filing, tracking speed, and smooth mobile/desktop navigation.",
+    feedback_focus_label: "Which area are you commenting on?",
+    feedback_notes_label: "UI / UX Observations (What worked well or felt confusing?)",
+    feedback_notes_ph: "Share thoughts on button placement, readability, Hindi/English labels, dark mode, or mobile comfort...",
+    feedback_features_label: "Requested Features (What would make S.A.M.A.D.H.A.N even better?)",
+    feedback_features_ph: "e.g., WhatsApp/SMS status alerts, hostel notice tracker, photo evidence preview, SLA countdown reminder...",
+    feedback_submit_btn: "Submit Feedback",
+    feedback_cancel_btn: "Cancel",
+    feedback_err_ratings: "Please select a score (1 to 5) for both Interface Clarity (UI) and Overall Experience (UX).",
+    feedback_err_cooldown: "Please wait 20 seconds before submitting another feedback response.",
+    feedback_success_title: "Feedback Recorded — Thank You!",
+    feedback_success_desc: "Your ratings and feature suggestions have been logged to improve future UDSC Students' Union releases.",
+    feedback_success_id: "Feedback Reference ID",
+    feedback_done_btn: "Return to Portal"
   },
   hi: {
     brand_title: "समाधान (S.A.M.A.D.H.A.N)",
@@ -353,7 +383,35 @@ const I18N = {
     role_joint_secretary: "संयुक्त सचिव",
     role_councilor: "केंद्रीय परिषद सदस्य",
     footer_rights_reserved: "© 2026 छात्र संघ, दक्षिण परिसर (UDSC), दिल्ली विश्वविद्यालय।",
-    footer_iso: "ISO 10002:2018 गुणवत्ता मानक"
+    footer_iso: "ISO 10002:2018 गुणवत्ता मानक",
+
+    // Portal UI/UX Feedback & Feature Wishlist
+    feedback_fab_label: "पोर्टल प्रतिक्रिया",
+    feedback_strip_badge: "पोर्टल सुधार पहल",
+    feedback_strip_title: "S.A.M.A.D.H.A.N UI/UX रेट करें एवं नई सुविधा सुझाएं",
+    feedback_strip_sub: "केवल 15 सेकंड में बताएं कि मोबाइल/डेस्कटॉप अनुभव कैसा रहा और आप कौन-सी नई सुविधाएं चाहते हैं।",
+    feedback_strip_btn: "प्रतिक्रिया दें",
+    feedback_badge: "नागरिक अनुभव सर्वेक्षण • प्रोजेक्ट S.E.W.A.",
+    feedback_modal_title: "पोर्टल UI/UX प्रतिक्रिया एवं नई सुविधा सुझाव",
+    feedback_modal_sub: "मोबाइल स्पष्टता, सुगमता और छात्र सुविधाओं को बेहतर बनाने में हमारी सहायता करें।",
+    feedback_privacy_notice: "गोपनीयता सूचना: कृपया यहाँ अपना नाम, ईमेल, फ़ोन नंबर या व्यक्तिगत शिकायत का विवरण न लिखें। यह प्रविष्टि Portal_Feedback टैब में दर्ज होती है।",
+    feedback_ui_label: "1. इंटरफ़ेस और स्पष्टता (UI) — 1 से 5 रेटिंग",
+    feedback_ui_hint: "पठनीयता, रंग संयोजन, लेआउट और फ़ॉन्ट स्पष्टता।",
+    feedback_ux_label: "2. समग्र उपयोगकर्ता अनुभव (UX) — 1 से 5 रेटिंग",
+    feedback_ux_hint: "शिकायत दर्ज करने की गति, ट्रैकिंग सरलता और मोबाइल/डेस्कटॉप सहजता।",
+    feedback_focus_label: "आप किस भाग पर प्रतिक्रिया दे रहे हैं?",
+    feedback_notes_label: "UI / UX अनुभव टिप्पणी (क्या अच्छा लगा या क्या कठिन लगा?)",
+    feedback_notes_ph: "बटन की स्थिति, पठनीयता, हिंदी/अंग्रेज़ी विकल्प, डार्क मोड या मोबाइल अनुभव पर अपने विचार लिखें...",
+    feedback_features_label: "नई सुविधा अनुरोध (आप पोर्टल में कौन-सी नई सुविधा चाहते हैं?)",
+    feedback_features_ph: "जैसे: WhatsApp/ईमेल अलर्ट, छात्रावास नोटिस बोर्ड, दस्तावेज़ अपलोड या SLA रिमाइंडर...",
+    feedback_submit_btn: "प्रतिक्रिया भेजें",
+    feedback_cancel_btn: "रद्द करें",
+    feedback_err_ratings: "कृपया आगे बढ़ने के लिए UI और समग्र UX दोनों के लिए 1 से 5 के बीच रेटिंग चुनें।",
+    feedback_err_cooldown: "कृपया अगली प्रतिक्रिया भेजने से पहले 20 सेकंड प्रतीक्षा करें।",
+    feedback_success_title: "प्रतिक्रिया दर्ज हो गई — धन्यवाद!",
+    feedback_success_desc: "आपके सुझाव और रेटिंग भविष्य के पोर्टल सुधारों के लिए रिकॉर्ड कर लिए गए हैं।",
+    feedback_success_id: "प्रतिक्रिया संदर्भ आईडी",
+    feedback_done_btn: "पोर्टल पर लौटें"
   }
 };
 
@@ -1047,6 +1105,17 @@ const state = {
   toastMessage: null,
   erasureConfirmTicketId: null,
   
+  // Portal UX Feedback Modal state
+  feedbackModalOpen: false,
+  feedbackUiRating: 0,
+  feedbackUxRating: 0,
+  feedbackFocusArea: 'General UI/UX',
+  feedbackUiNotes: '',
+  feedbackFeatures: '',
+  feedbackError: null,
+  feedbackSubmittedRecord: null,
+  lastFeedbackAt: Number((typeof localStorage !== 'undefined' && localStorage.getItem('samadhan_last_feedback_at')) || 0),
+  
   // Track state
   searchToken: '',
   activeGrievance: null,
@@ -1156,10 +1225,18 @@ function renderApp() {
       </div>
     </header>
 
-    <!-- Main Container -->
-    <main id="main-content" tabindex="-1" class="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-7">
+    <!-- Main Container (pb-6 md:pb-20 clears desktop bottom-right feedback trigger without clipping cards) -->
+    <main id="main-content" tabindex="-1" class="max-w-5xl mx-auto px-3 sm:px-6 pt-3 sm:pt-7 pb-6 md:pb-20">
       ${renderActiveTab()}
+      ${renderMobileFeedbackStrip()}
     </main>
+
+    <!-- Desktop Floating Portal Feedback Trigger (Hidden on < md so mobile forms stay 100% unobstructed) -->
+    <button type="button" onclick="openFeedbackModal('Desktop Floating Button')" class="feedback-fab hidden md:inline-flex" aria-label="${t('feedback_fab_label')}">
+      ${iconSvg('chat', 'w-4 h-4 text-amber-600 dark:text-amber-400')}
+      <span>${t('feedback_fab_label')}</span>
+      <span class="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
+    </button>
 
     <!-- Mobile Thumb-Zone Bottom Dock (< md) -->
     <nav class="mobile-bottom-dock md:hidden grid grid-cols-4 gap-1" aria-label="Mobile navigation">
@@ -1194,6 +1271,9 @@ function renderApp() {
     <!-- Accessible Section 12 Right-to-Erasure Dialog -->
     ${state.erasureConfirmTicketId ? renderErasureConfirmDialog(state.erasureConfirmTicketId) : ''}
 
+    <!-- Accessible Portal UI/UX Feedback & Feature Request Modal -->
+    ${state.feedbackModalOpen ? renderFeedbackModal() : ''}
+
     <!-- Institutional Footer -->
     <footer class="site-footer">
       <div class="footer-inner">
@@ -1226,6 +1306,7 @@ function renderApp() {
               <li><a href="#" onclick="navigateTab('track'); return false;">${iconSvg('search', 'w-3.5 h-3.5')}<span>${t('footer_service_track')}</span></a></li>
               <li><a href="#" onclick="navigateTab('insights'); return false;">${iconSvg('chart', 'w-3.5 h-3.5')}<span>${t('footer_service_telemetry')}</span></a></li>
               <li><a href="#" onclick="navigateTab('dpdp'); return false;">${iconSvg('shield', 'w-3.5 h-3.5')}<span>${t('footer_service_rights')}</span></a></li>
+              <li><a href="#" onclick="openFeedbackModal('Footer Quick Link'); return false;">${iconSvg('chat', 'w-3.5 h-3.5')}<span>${t('feedback_fab_label')}</span></a></li>
             </ul>
           </div>
 
@@ -1282,6 +1363,11 @@ function renderApp() {
         <div class="footer-bottom">
           <p>${t('footer_rights_reserved')}</p>
           <div class="flex items-center gap-3 text-xs flex-wrap">
+            <button type="button" onclick="openFeedbackModal('Footer Bottom')" class="text-amber-400 hover:text-amber-300 font-semibold inline-flex items-center gap-1.5 underline underline-offset-4 bg-transparent border-0 cursor-pointer p-0">
+              ${iconSvg('chat', 'w-3.5 h-3.5')}
+              <span>${t('feedback_fab_label')}</span>
+            </button>
+            <span class="text-zinc-700">•</span>
             <span class="text-amber-400 font-semibold">A Project S.E.W.A. Initiative</span>
             <span class="text-zinc-700">•</span>
             <span class="text-emerald-400 font-semibold">DPDP Act 2023 Compliant</span>
@@ -1710,6 +1796,20 @@ function renderSuccessScreen(g) {
         </a>
       </div>
 
+      <div class="p-3.5 bg-amber-500/5 border border-amber-500/25 rounded-lg text-xs text-slate-700 dark:text-zinc-300 flex flex-wrap items-center justify-between gap-3 max-w-md mx-auto">
+        <div class="flex items-center gap-2.5 text-left min-w-0 flex-1">
+          <span class="text-amber-700 dark:text-amber-400 flex-shrink-0">${iconSvg('chat', 'w-5 h-5')}</span>
+          <div class="min-w-0">
+            <span class="font-semibold block text-slate-900 dark:text-white">${t('feedback_strip_title')}</span>
+            <span class="text-[11px] text-slate-500 dark:text-zinc-400 block">${t('feedback_strip_sub')}</span>
+          </div>
+        </div>
+        <button type="button" onclick="openFeedbackModal('Submission Receipt')" class="btn btn-secondary btn-sm text-[11px] whitespace-nowrap">
+          ${iconSvg('sparkles', 'w-3.5 h-3.5 text-amber-700 dark:text-amber-400')}
+          <span>${t('feedback_strip_btn')}</span>
+        </button>
+      </div>
+
       <div class="pt-4 border-t border-slate-200 dark:border-zinc-800">
         <button type="button" onclick="resetWizard()" class="text-xs text-slate-600 dark:text-zinc-400 hover:underline font-semibold">
           ${t('btn_lodge_another')}
@@ -2067,6 +2167,7 @@ window.toggleLanguage = function() {
   if (state.activeTab === 'register' && state.wizardStep === 2) {
     syncDraftInputsToState();
   }
+  if (state.feedbackModalOpen) syncFeedbackInputsToState();
   state.language = state.language === 'en' ? 'hi' : 'en';
   renderApp();
 };
@@ -2075,6 +2176,7 @@ window.setTheme = function(newTheme) {
   if (state.activeTab === 'register' && state.wizardStep === 2) {
     syncDraftInputsToState();
   }
+  if (state.feedbackModalOpen) syncFeedbackInputsToState();
   state.theme = newTheme;
   localStorage.setItem('samadhan_theme', newTheme);
   document.documentElement.setAttribute('data-theme', newTheme);
@@ -2382,10 +2484,341 @@ window.confirmRightToErasure = function(ticketId) {
 };
 
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && state.erasureConfirmTicketId) {
-    closeErasureDialog();
+  if (e.key === 'Escape') {
+    if (state.erasureConfirmTicketId) closeErasureDialog();
+    if (state.feedbackModalOpen) closeFeedbackModal();
   }
 });
+
+// ============================================================================
+// 11.5 PORTAL UI/UX FEEDBACK & FEATURE WISHLIST ENGINE
+// ============================================================================
+
+const FEEDBACK_FOCUS_AREAS = [
+  { id: 'General UI/UX', en: 'General UI/UX', hi: 'सामान्य UI/UX' },
+  { id: 'Mobile Layout', en: 'Mobile Layout', hi: 'मोबाइल लेआउट' },
+  { id: 'Filing Wizard', en: 'Filing Wizard', hi: 'शिकायत फॉर्म' },
+  { id: 'Token Tracker', en: 'Token Tracker', hi: 'टोकन ट्रैकर' },
+  { id: 'Bilingual (EN/HI)', en: 'Bilingual (EN/HI)', hi: 'हिंदी / अंग्रेज़ी' },
+  { id: 'Stats & Ledger', en: 'Stats & Ledger', hi: 'आंकड़े व शीट' }
+];
+
+const FEEDBACK_SCALE_WORDS = {
+  en: { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very Good', 5: 'Excellent' },
+  hi: { 1: 'कमज़ोर', 2: 'ठीक', 3: 'अच्छा', 4: 'बहुत अच्छा', 5: 'उत्कृष्ट' }
+};
+
+function renderMobileFeedbackStrip() {
+  return `
+    <section class="md:hidden mt-6 civic-card civic-card-accent flex flex-col gap-3" aria-label="${t('feedback_strip_title')}">
+      <div class="flex items-start gap-3">
+        <div class="w-9 h-9 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+          ${iconSvg('chat', 'w-4 h-4')}
+        </div>
+        <div class="min-w-0 flex-1">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 block">
+            ${t('feedback_strip_badge')}
+          </span>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white leading-snug mt-0.5">
+            ${t('feedback_strip_title')}
+          </h3>
+          <p class="text-xs text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed">
+            ${t('feedback_strip_sub')}
+          </p>
+        </div>
+      </div>
+      <button type="button" onclick="openFeedbackModal('Mobile Inline Strip')" class="btn btn-secondary w-full text-xs justify-center">
+        ${iconSvg('sparkles', 'w-4 h-4 text-amber-700 dark:text-amber-400')}
+        <span>${t('feedback_strip_btn')}</span>
+      </button>
+    </section>
+  `;
+}
+
+function renderRatingScaleButtons(kind, selectedVal, label, hint) {
+  const lang = state.language === 'hi' ? 'hi' : 'en';
+  const words = FEEDBACK_SCALE_WORDS[lang];
+  return `
+    <div class="space-y-2">
+      <div class="flex items-baseline justify-between gap-2 flex-wrap">
+        <label class="text-xs font-bold text-slate-900 dark:text-white">${label} <span class="text-rose-600 dark:text-rose-400">*</span></label>
+        ${selectedVal > 0 ? `<span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 tabular-nums">${selectedVal} / 5 • ${words[selectedVal]}</span>` : ''}
+      </div>
+      <p class="text-[11px] text-slate-500 dark:text-zinc-400">${hint}</p>
+      <div class="rating-scale-group" role="radiogroup" aria-label="${label}">
+        ${[1, 2, 3, 4, 5].map(score => {
+          const isSelected = selectedVal === score;
+          return `
+            <button
+              type="button"
+              role="radio"
+              aria-checked="${isSelected}"
+              onclick="setFeedbackRating('${kind}', ${score})"
+              class="rating-scale-btn ${isSelected ? 'selected' : ''}"
+            >
+              <span class="text-sm font-extrabold tabular-nums leading-none">${score}</span>
+              <span class="text-[10px] font-semibold leading-tight text-center">${words[score]}</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderFeedbackModal() {
+  const isHi = state.language === 'hi';
+  const submitted = state.feedbackSubmittedRecord;
+
+  return `
+    <div class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle" onclick="if (event.target === this) closeFeedbackModal()">
+      <div id="feedbackModalPanel" class="civic-card civic-card-accent w-full sm:max-w-xl max-h-[92vh] overflow-y-auto rounded-b-none sm:rounded-2xl shadow-2xl space-y-5">
+        <div class="flex items-start justify-between gap-3 border-b border-slate-200 dark:border-zinc-800 pb-3.5">
+          <div class="flex items-start gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              ${iconSvg('chat', 'w-5 h-5')}
+            </div>
+            <div class="min-w-0">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 block">
+                ${t('feedback_badge')}
+              </span>
+              <h2 id="feedbackModalTitle" class="text-base sm:text-lg font-extrabold leading-snug">
+                ${t('feedback_modal_title')}
+              </h2>
+              <p class="text-xs text-slate-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
+                ${t('feedback_modal_sub')}
+              </p>
+            </div>
+          </div>
+          <button type="button" onclick="closeFeedbackModal()" aria-label="${t('feedback_cancel_btn')}" class="min-w-[40px] min-h-[40px] rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 flex items-center justify-center text-slate-600 dark:text-zinc-400 font-bold flex-shrink-0">
+            ✕
+          </button>
+        </div>
+
+        ${submitted ? `
+          <div class="py-5 text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
+              ${iconSvg('check', 'w-6 h-6')}
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">${t('feedback_success_title')}</h3>
+              <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-1 max-w-md mx-auto">${t('feedback_success_desc')}</p>
+            </div>
+            <div class="civic-well max-w-sm mx-auto space-y-2 text-xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 block">${t('feedback_success_id')}</span>
+              <div class="font-mono text-base font-extrabold text-slate-900 dark:text-amber-300">${escapeHtml(submitted.feedbackId)}</div>
+              <div class="flex items-center justify-center gap-4 pt-1 text-[11px] font-semibold text-slate-600 dark:text-zinc-300">
+                <span>UI: ${submitted.uiRating}/5</span>
+                <span>•</span>
+                <span>UX: ${submitted.uxRating}/5</span>
+              </div>
+            </div>
+            <button type="button" onclick="closeFeedbackModal()" class="btn btn-primary btn-sm">
+              ${t('feedback_done_btn')}
+            </button>
+          </div>
+        ` : `
+          <div class="p-3 rounded-lg bg-amber-500/5 border border-amber-500/25 flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+            <span class="text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5">${iconSvg('shield', 'w-4 h-4')}</span>
+            <p class="leading-relaxed text-[11px] sm:text-xs">${t('feedback_privacy_notice')}</p>
+          </div>
+
+          ${state.feedbackError ? `
+            <div role="alert" class="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-700 dark:text-rose-300 flex items-center gap-2">
+              ${iconSvg('alert', 'w-4 h-4 flex-shrink-0')}
+              <span>${escapeHtml(state.feedbackError)}</span>
+            </div>
+          ` : ''}
+
+          <div class="space-y-4">
+            ${renderRatingScaleButtons('ui', state.feedbackUiRating, t('feedback_ui_label'), t('feedback_ui_hint'))}
+            ${renderRatingScaleButtons('ux', state.feedbackUxRating, t('feedback_ux_label'), t('feedback_ux_hint'))}
+
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-slate-900 dark:text-white block">${t('feedback_focus_label')}</label>
+              <div class="flex flex-wrap gap-2">
+                ${FEEDBACK_FOCUS_AREAS.map(area => `
+                  <button type="button" onclick="setFeedbackFocusArea('${area.id}')" class="feedback-focus-chip ${state.feedbackFocusArea === area.id ? 'active' : ''}">
+                    ${isHi ? area.hi : area.en}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <label for="feedbackUiNotesInput" class="form-label mb-0">${t('feedback_notes_label')}</label>
+                <span class="text-[10px] font-mono text-slate-500 dark:text-zinc-400 tabular-nums">${(state.feedbackUiNotes || '').length}/1000</span>
+              </div>
+              <textarea
+                id="feedbackUiNotesInput"
+                maxlength="1000"
+                rows="3"
+                oninput="state.feedbackUiNotes = this.value"
+                placeholder="${t('feedback_notes_ph')}"
+                class="form-textarea text-xs sm:text-sm"
+              >${escapeHtml(state.feedbackUiNotes)}</textarea>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <label for="feedbackFeaturesInput" class="form-label mb-0">${t('feedback_features_label')}</label>
+                <span class="text-[10px] font-mono text-slate-500 dark:text-zinc-400 tabular-nums">${(state.feedbackFeatures || '').length}/1000</span>
+              </div>
+              <textarea
+                id="feedbackFeaturesInput"
+                maxlength="1000"
+                rows="2"
+                oninput="state.feedbackFeatures = this.value"
+                placeholder="${t('feedback_features_ph')}"
+                class="form-textarea text-xs sm:text-sm"
+              >${escapeHtml(state.feedbackFeatures)}</textarea>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-zinc-800">
+            <button type="button" onclick="closeFeedbackModal()" class="btn btn-secondary btn-sm">
+              ${t('feedback_cancel_btn')}
+            </button>
+            <button type="button" onclick="submitPortalFeedback()" class="btn btn-primary btn-sm">
+              ${iconSvg('check', 'w-4 h-4')}
+              <span>${t('feedback_submit_btn')}</span>
+            </button>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function syncFeedbackInputsToState() {
+  const uiNotesEl = document.getElementById('feedbackUiNotesInput');
+  const featuresEl = document.getElementById('feedbackFeaturesInput');
+  if (uiNotesEl) state.feedbackUiNotes = uiNotesEl.value;
+  if (featuresEl) state.feedbackFeatures = featuresEl.value;
+}
+
+window.openFeedbackModal = function(sourceLabel = '') {
+  if (state.activeTab === 'register' && state.wizardStep === 2) {
+    syncDraftInputsToState();
+  }
+  state.feedbackModalOpen = true;
+  state.feedbackError = null;
+  state.feedbackSubmittedRecord = null;
+  state.feedbackSource = sourceLabel || '';
+  renderApp();
+};
+
+window.closeFeedbackModal = function() {
+  syncFeedbackInputsToState();
+  state.feedbackModalOpen = false;
+  state.feedbackError = null;
+  renderApp();
+};
+
+function renderWithFeedbackModalScroll(updater) {
+  const prevPanel = document.getElementById('feedbackModalPanel');
+  const savedScrollTop = prevPanel ? prevPanel.scrollTop : 0;
+  updater();
+  renderApp();
+  const nextPanel = document.getElementById('feedbackModalPanel');
+  if (nextPanel) {
+    nextPanel.scrollTop = savedScrollTop;
+  }
+}
+
+window.setFeedbackRating = function(kind, score) {
+  syncFeedbackInputsToState();
+  const numericScore = Math.max(1, Math.min(5, parseInt(score, 10) || 0));
+  renderWithFeedbackModalScroll(() => {
+    if (kind === 'ui') state.feedbackUiRating = numericScore;
+    if (kind === 'ux') state.feedbackUxRating = numericScore;
+    state.feedbackError = null;
+  });
+};
+
+window.setFeedbackFocusArea = function(areaId) {
+  syncFeedbackInputsToState();
+  renderWithFeedbackModalScroll(() => {
+    state.feedbackFocusArea = areaId;
+  });
+};
+
+function syncFeedbackToGoogleSheet(record) {
+  try {
+    const existing = JSON.parse(localStorage.getItem('samadhan_portal_feedback_log') || '[]');
+    existing.unshift(record);
+    localStorage.setItem('samadhan_portal_feedback_log', JSON.stringify(existing.slice(0, 25)));
+  } catch (e) {}
+
+  const webhookUrl = getGoogleSheetWebhookUrl();
+  if (webhookUrl && typeof fetch !== 'undefined') {
+    try {
+      fetch(webhookUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(record)
+      }).catch(err => console.warn('Feedback sync warning:', err));
+    } catch (err) {
+      console.warn('Feedback sync dispatch error:', err);
+    }
+  }
+}
+
+window.submitPortalFeedback = function() {
+  syncFeedbackInputsToState();
+  state.feedbackError = null;
+
+  const uiRating = parseInt(state.feedbackUiRating, 10) || 0;
+  const uxRating = parseInt(state.feedbackUxRating, 10) || 0;
+  if (uiRating < 1 || uiRating > 5 || uxRating < 1 || uxRating > 5) {
+    state.feedbackError = t('feedback_err_ratings');
+    renderApp();
+    return;
+  }
+
+  const nowMs = Date.now();
+  if (state.lastFeedbackAt && (nowMs - state.lastFeedbackAt) < 20000) {
+    state.feedbackError = t('feedback_err_cooldown');
+    renderApp();
+    return;
+  }
+  state.lastFeedbackAt = nowMs;
+  try {
+    localStorage.setItem('samadhan_last_feedback_at', String(nowMs));
+  } catch (e) {}
+
+  const viewportTag = (typeof window !== 'undefined' && window.innerWidth < 768) ? 'Mobile' : 'Desktop';
+  const langTag = state.language === 'hi' ? 'HI' : 'EN';
+  const sourceSuffix = state.feedbackSource ? ` • ${state.feedbackSource}` : '';
+  const feedbackId = `FB-2026-${cryptoRandomString(6)}`;
+
+  const payload = {
+    action: 'submitFeedback',
+    feedbackId,
+    timestamp: sanitizeSpreadsheetCell(new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })),
+    uiRating,
+    uxRating,
+    focusArea: sanitizeSpreadsheetCell(state.feedbackFocusArea || 'General UI/UX'),
+    uiFeedback: sanitizeSpreadsheetCell(String(state.feedbackUiNotes || '').trim().substring(0, 1000)),
+    featureWishlist: sanitizeSpreadsheetCell(String(state.feedbackFeatures || '').trim().substring(0, 1000)),
+    context: sanitizeSpreadsheetCell(`${viewportTag} • ${langTag} • ${state.activeTab}${sourceSuffix}`)
+  };
+
+  syncFeedbackToGoogleSheet(payload);
+
+  state.feedbackSubmittedRecord = payload;
+  state.feedbackUiRating = 0;
+  state.feedbackUxRating = 0;
+  state.feedbackUiNotes = '';
+  state.feedbackFeatures = '';
+  state.feedbackError = null;
+  renderApp();
+  showToast(state.language === 'hi'
+    ? 'आपकी UI/UX प्रतिक्रिया दर्ज हो गई है। धन्यवाद!'
+    : 'Portal UI/UX feedback logged. Thank you!');
+};
 
 window.resetWizard = function() {
   state.wizardStep = 1;

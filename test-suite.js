@@ -632,6 +632,32 @@ it('Local Ollama Assistive Module: Disabled by default, strips PII, rejects prom
   assert.strictEqual(offlineRes.requiresHumanReview, true);
 });
 
+it('Portal UX Feedback UI: Dual 1-to-5 scales, feature wishlist, and smooth non-clipping mobile/desktop layout', () => {
+  const studentApp = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+  const stylesheet = fs.readFileSync(path.join(__dirname, 'styles.css'), 'utf8');
+
+  assert.ok(studentApp.includes('renderFeedbackModal'), 'Must define feedback modal renderer');
+  assert.ok(studentApp.includes("renderRatingScaleButtons('ui'"), 'Must include 1-5 UI clarity scale');
+  assert.ok(studentApp.includes("renderRatingScaleButtons('ux'"), 'Must include 1-5 overall UX scale');
+  assert.ok(studentApp.includes('feedbackUiNotesInput'), 'Must include UI/UX observations textarea');
+  assert.ok(studentApp.includes('feedbackFeaturesInput'), 'Must include requested features textarea');
+  assert.ok(studentApp.includes('feedback_privacy_notice'), 'Must include anonymous DPDP usability notice');
+
+  // Responsive non-clipping layout separation: floating FAB on md+ only, in-flow strip on < md
+  assert.ok(studentApp.includes('class="feedback-fab hidden md:inline-flex"'), 'Floating feedback button must scope to md+ desktop');
+  assert.ok(studentApp.includes('class="md:hidden mt-6 civic-card civic-card-accent'), 'Mobile strip must remain in-flow md:hidden to avoid form overlap');
+  assert.ok(stylesheet.includes('.rating-scale-btn.selected'), 'Stylesheet must style 1-5 selected feedback buttons cleanly');
+});
+
+it('Apps Script Portal_Feedback Tab: Enforces 1-5 integer validation, tab isolation, and formula sanitization', () => {
+  const gs = fs.readFileSync(path.join(__dirname, 'google-sheets-sync.gs'), 'utf8');
+  assert.ok(gs.includes('var FEEDBACK_SHEET_NAME = "Portal_Feedback"'), 'Must isolate feedback to Portal_Feedback tab');
+  assert.ok(gs.includes('getPrimaryLedgerSheet_'), 'Must isolate primary grievance ledger sheet from feedback tab');
+  assert.ok(gs.includes('data.action === "submitFeedback"'), 'Must handle submitFeedback webhook action');
+  assert.ok(gs.includes('uiRating < 1 || uiRating > 5 || isNaN(uxRating) || uxRating < 1 || uxRating > 5'), 'Must strictly validate 1-5 rating bounds');
+  assert.ok(gs.includes('sanitizeSpreadsheetCell(String(data.featureWishlist'), 'Must sanitize feature wishlist text against formula injection');
+});
+
 // ----------------------------------------------------------------------------
 // FINAL SUMMARY
 // ----------------------------------------------------------------------------

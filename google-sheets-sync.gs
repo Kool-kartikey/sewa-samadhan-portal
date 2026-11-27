@@ -79,6 +79,119 @@ var COLUMN_CONFIGS = [
   { index: 15, name: "Official Union Action Notes",   width: 340, align: "left"   }
 ];
 
+var FEEDBACK_SHEET_NAME = "Portal_Feedback";
+
+var FEEDBACK_COLUMN_CONFIGS = [
+  { index: 1, name: "Timestamp (IST)",             width: 175, align: "center" },
+  { index: 2, name: "Feedback ID",                 width: 165, align: "center", font: "Roboto Mono", weight: "bold", color: "#b45309" },
+  { index: 3, name: "UI / Clarity Score (1-5)",    width: 165, align: "center", weight: "bold" },
+  { index: 4, name: "Overall UX Score (1-5)",      width: 165, align: "center", weight: "bold" },
+  { index: 5, name: "UI / UX Focus Area",          width: 195, align: "center" },
+  { index: 6, name: "UI / UX Observations",        width: 360, align: "left"   },
+  { index: 7, name: "Requested Features",          width: 360, align: "left"   },
+  { index: 8, name: "Context (Device • Lang • Tab)", width: 215, align: "center" }
+];
+
+function getPrimaryLedgerSheet_(ss) {
+  var sheets = ss.getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].getName() !== FEEDBACK_SHEET_NAME) {
+      return sheets[i];
+    }
+  }
+  return sheets[0];
+}
+
+function protectSheetReadOnly_(sheet, description) {
+  var protections = sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET);
+  for (var i = 0; i < protections.length; i++) {
+    protections[i].remove();
+  }
+  var p = sheet.protect().setDescription(description);
+  p.removeEditors(p.getEditors());
+  if (p.canDomainEdit()) {
+    p.setDomainEdit(false);
+  }
+}
+
+function styleHeaderAndColumns_(sheet, configs) {
+  var numCols = configs.length;
+  sheet.setFrozenRows(1);
+  sheet.setRowHeight(1, 44);
+  for (var i = 0; i < configs.length; i++) {
+    sheet.setColumnWidth(configs[i].index, configs[i].width);
+  }
+  sheet.getRange(1, 1, 1, numCols)
+    .setFontWeight("bold")
+    .setFontSize(10)
+    .setFontFamily("Inter")
+    .setBackground("#0f172a")
+    .setFontColor("#f59e0b")
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("center")
+    .setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
+}
+
+function getOrCreateFeedbackSheet_(ss) {
+  var sheet = ss.getSheetByName(FEEDBACK_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(FEEDBACK_SHEET_NAME);
+  }
+  if (sheet.getLastRow() === 0) {
+    var headers = [];
+    for (var i = 0; i < FEEDBACK_COLUMN_CONFIGS.length; i++) {
+      headers.push(FEEDBACK_COLUMN_CONFIGS[i].name);
+    }
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    formatFeedbackSheetLayout_(sheet);
+  }
+  return sheet;
+}
+
+function formatFeedbackSheetLayout_(sheet) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!sheet) {
+    sheet = getOrCreateFeedbackSheet_(ss);
+  }
+  var numCols = FEEDBACK_COLUMN_CONFIGS.length;
+  var lastRow = sheet.getLastRow();
+  sheet.setFrozenColumns(2);
+  styleHeaderAndColumns_(sheet, FEEDBACK_COLUMN_CONFIGS);
+
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, numCols)
+      .setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP)
+      .setVerticalAlignment("top")
+      .setFontFamily("Inter")
+      .setFontSize(9.5)
+      .setBorder(true, true, true, true, true, true, "#e2e8f0", SpreadsheetApp.BorderStyle.SOLID);
+
+    for (var j = 0; j < FEEDBACK_COLUMN_CONFIGS.length; j++) {
+      var cfg = FEEDBACK_COLUMN_CONFIGS[j];
+      var colRange = sheet.getRange(2, cfg.index, lastRow - 1, 1);
+      colRange.setHorizontalAlignment(cfg.align);
+      if (cfg.font) colRange.setFontFamily(cfg.font);
+      if (cfg.weight) colRange.setFontWeight(cfg.weight);
+      if (cfg.color) colRange.setFontColor(cfg.color);
+    }
+
+    for (var r = 2; r <= lastRow; r++) {
+      sheet.setRowHeight(r, Math.max(sheet.getRowHeight(r) || 0, 48));
+      sheet.getRange(r, 1, 1, numCols).setBackground(r % 2 === 0 ? "#ffffff" : "#f8fafc");
+    }
+  }
+
+  try {
+    protectSheetReadOnly_(sheet, 'S.A.M.A.D.H.A.N Portal UI/UX Feedback Tab — Protected');
+  } catch (e) {}
+}
+
+function formatFeedbackSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = getOrCreateFeedbackSheet_(ss);
+  formatFeedbackSheetLayout_(sheet);
+}
+
 /**
  * Custom Google Sheets Top Menu Integration
  */
@@ -86,6 +199,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("🏛️ SAMADHAN Portal")
     .addItem("✨ Format Cells for Comfortable Viewing", "formatSheetForComfortableViewing")
+    .addItem("💬 Format Portal Feedback Tab", "formatFeedbackSheet")
     .addItem("🧹 Scrub Historical PII & Testimonies (DPDP)", "sanitizeExistingPublicLedgerRows")
     .addItem("🔒 Enforce Read-Only Sheet Protection", "lockSheetReadOnly")
     .addItem("🔄 Reset Header Styles", "setupHeaders")
@@ -97,7 +211,7 @@ function onOpen() {
  * Run once from Apps Script toolbar or via the "🏛️ SAMADHAN Portal" menu after migration.
  */
 function sanitizeExistingPublicLedgerRows() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var sheet = getPrimaryLedgerSheet_(SpreadsheetApp.getActiveSpreadsheet());
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) {
     return;
@@ -134,18 +248,17 @@ function sanitizeExistingPublicLedgerRows() {
  * Prevents unauthorized or accidental cell modification.
  */
 function lockSheetReadOnly() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var protections = sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET);
-  for (var i = 0; i < protections.length; i++) {
-    protections[i].remove();
-  }
-  var p = sheet.protect().setDescription('S.A.M.A.D.H.A.N Immutable Public Transparency Ledger — Protected');
-  p.removeEditors(p.getEditors());
-  if (p.canDomainEdit()) {
-    p.setDomainEdit(false);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = getPrimaryLedgerSheet_(ss);
+  protectSheetReadOnly_(sheet, 'S.A.M.A.D.H.A.N Immutable Public Transparency Ledger — Protected');
+  var feedbackSheet = ss.getSheetByName(FEEDBACK_SHEET_NAME);
+  if (feedbackSheet) {
+    try {
+      protectSheetReadOnly_(feedbackSheet, 'S.A.M.A.D.H.A.N Portal UI/UX Feedback Tab — Protected');
+    } catch (e) {}
   }
   try {
-    SpreadsheetApp.getActiveSpreadsheet().toast('Sheet is now locked and protected in read-only mode!', '🔒 Protection Enforced', 5);
+    ss.toast('Ledger & Feedback tabs are locked and protected in read-only mode!', '🔒 Protection Enforced', 5);
   } catch (e) {}
 }
 
@@ -153,7 +266,7 @@ function lockSheetReadOnly() {
  * One-Click Layout Optimizer for Comfortable On-Screen Viewing
  */
 function formatSheetForComfortableViewing() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var sheet = getPrimaryLedgerSheet_(SpreadsheetApp.getActiveSpreadsheet());
   formatSheetLayout(sheet);
 }
 
@@ -164,33 +277,18 @@ function formatSheetForComfortableViewing() {
  */
 function formatSheetLayout(sheet) {
   if (!sheet) {
-    sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    sheet = getPrimaryLedgerSheet_(SpreadsheetApp.getActiveSpreadsheet());
   }
   
   var numCols = COLUMN_CONFIGS.length;
   var lastRow = sheet.getLastRow();
   
   // 1. Set generous column widths so each record is fully visible without clipping
-  for (var i = 0; i < COLUMN_CONFIGS.length; i++) {
-    sheet.setColumnWidth(COLUMN_CONFIGS[i].index, COLUMN_CONFIGS[i].width);
-  }
-  
   // 2. Freeze Navigation Panes (Header row + First two columns: Timestamp & Tracking Token)
-  sheet.setFrozenRows(1);
   sheet.setFrozenColumns(2);
   
   // 3. Style Header Row (Row 1)
-  sheet.setRowHeight(1, 44);
-  var headerRange = sheet.getRange(1, 1, 1, numCols);
-  headerRange
-    .setFontWeight("bold")
-    .setFontSize(10)
-    .setFontFamily("Inter")
-    .setBackground("#0f172a")
-    .setFontColor("#f59e0b")
-    .setVerticalAlignment("middle")
-    .setHorizontalAlignment("center")
-    .setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
+  styleHeaderAndColumns_(sheet, COLUMN_CONFIGS);
     
   // 4. Style All Data Rows (Row 2 onwards)
   if (lastRow > 1) {
@@ -247,7 +345,7 @@ function formatSheetLayout(sheet) {
  * Initializes Header Row and triggers Layout Formatting
  */
 function setupHeaders() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var sheet = getPrimaryLedgerSheet_(SpreadsheetApp.getActiveSpreadsheet());
   var headers = [];
   for (var i = 0; i < COLUMN_CONFIGS.length; i++) {
     headers.push(COLUMN_CONFIGS[i].name);
@@ -329,11 +427,7 @@ function findRowByTrackToken(sheet, rawToken) {
  */
 function doPost(e) {
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    if (sheet.getLastRow() === 0) {
-      setupHeaders();
-    }
-    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!e || !e.postData || !e.postData.contents) {
       return ContentService.createTextOutput(JSON.stringify({
         status: "error",
@@ -342,6 +436,73 @@ function doPost(e) {
     }
 
     var data = JSON.parse(e.postData.contents);
+
+    // Anonymous Portal UI/UX Feedback & Feature Wishlist (Separate "Portal_Feedback" Tab)
+    if (data.action === "submitFeedback") {
+      var uiRating = Math.round(Number(data.uiRating));
+      var uxRating = Math.round(Number(data.uxRating));
+      if (isNaN(uiRating) || uiRating < 1 || uiRating > 5 || isNaN(uxRating) || uxRating < 1 || uxRating > 5) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Invalid feedback ratings: UI and UX ratings must be integers from 1 to 5."
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      var feedbackSheet = getOrCreateFeedbackSheet_(ss);
+      var rawFeedbackId = String(data.feedbackId || "").trim().toUpperCase();
+      if (!/^FB-2026-[0-9A-Z]{4,10}$/.test(rawFeedbackId)) {
+        rawFeedbackId = "FB-2026-" + Utilities.getUuid().replace(/-/g, "").slice(0, 6).toUpperCase();
+      }
+
+      var focusArea = sanitizeSpreadsheetCell(String(data.focusArea || "General UI/UX").trim().substring(0, 80));
+      var uiNotes = sanitizeSpreadsheetCell(String(data.uiFeedback || "").trim().substring(0, 1000) || "No written UI/UX remarks provided.");
+      var featureWishlist = sanitizeSpreadsheetCell(String(data.featureWishlist || "").trim().substring(0, 1000) || "None specified.");
+      var portalContext = sanitizeSpreadsheetCell(String(data.context || "Web • EN").trim().substring(0, 120));
+      var feedbackTimeIST = sanitizeSpreadsheetCell(data.timestamp || new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
+
+      var feedbackRow = [
+        feedbackTimeIST,
+        rawFeedbackId,
+        uiRating + " / 5",
+        uxRating + " / 5",
+        focusArea,
+        uiNotes,
+        featureWishlist,
+        portalContext
+      ];
+
+      feedbackSheet.appendRow(feedbackRow);
+      var fbLastRow = feedbackSheet.getLastRow();
+      var fbRowRange = feedbackSheet.getRange(fbLastRow, 1, 1, feedbackRow.length);
+      fbRowRange
+        .setFontSize(9.5)
+        .setFontFamily("Inter")
+        .setVerticalAlignment("top")
+        .setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP)
+        .setBorder(true, true, true, true, true, true, "#e2e8f0", SpreadsheetApp.BorderStyle.SOLID)
+        .setBackground(fbLastRow % 2 === 0 ? "#ffffff" : "#f8fafc");
+
+      feedbackSheet.setRowHeight(fbLastRow, 52);
+      for (var fc = 0; fc < FEEDBACK_COLUMN_CONFIGS.length; fc++) {
+        var fCfg = FEEDBACK_COLUMN_CONFIGS[fc];
+        var fCell = feedbackSheet.getRange(fbLastRow, fCfg.index);
+        fCell.setHorizontalAlignment(fCfg.align);
+        if (fCfg.font) fCell.setFontFamily(fCfg.font);
+        if (fCfg.weight) fCell.setFontWeight(fCfg.weight);
+        if (fCfg.color) fCell.setFontColor(fCfg.color);
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        feedbackId: rawFeedbackId,
+        message: "Portal UI/UX feedback logged to the Portal_Feedback tab."
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var sheet = getPrimaryLedgerSheet_(ss);
+    if (sheet.getLastRow() === 0) {
+      setupHeaders();
+    }
     
     // Remote format trigger via POST (Authenticated Executives Only)
     if (data.action === "format" || data.action === "optimizeLayout") {

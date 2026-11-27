@@ -3,7 +3,7 @@
 
 > **Full Form:** **S.A.M.A.D.H.A.N** — *Student Advocacy, Monitoring, Analytics and Digital Heeding of All Needs*  
 > **Root Initiative:** **A Project S.E.W.A. Initiative** (*Systematically Eliminating Worrisome Anomalies*)  
-> **Portal Release:** `v5.7.1`  
+> **Portal Release:** `v6.2.0`  
 > **Statutory Framework:** Digital Personal Data Protection (DPDP) Act, 2023 (India) & UGC (Grievance Redressal of Students) Regulations, 2023  
 > **Quality Standard:** ISO 10002:2018 (Complaints Handling in Organizations)
 
@@ -57,11 +57,11 @@ S.A.M.A.D.H.A.N was built to resolve long-standing operational issues in univers
 
 ## 4. Hardened Architecture, Privacy Boundary & Verification Status
 
-* **Public Transparency Ledger Boundary (`IMPLEMENTED AND TESTED` in code/GS):** The view-only Google Sheet (`google-sheets-sync.gs`) excludes complainant identifiers (`studentName`, `studentEmail`, `studentPhone`) and confidential raw testimonies (`[CONFIDENTIAL_TESTIMONY_WITHHELD_PUBLICLY]`), while enforcing duplicate `trackToken` rejection and strict status transitions (`VALID_TRANSITIONS`). *(Note: Existing live Google Apps Script deployments must be manually updated with the latest `google-sheets-sync.gs` and historical sheet rows audited before production reliance.)*
+* **Public Transparency Ledger Boundary (`IMPLEMENTED AND TESTED` in code/GS):** The view-only Google Sheet (`google-sheets-sync.gs`) excludes complainant identifiers (`studentName`, `studentEmail`, `studentPhone`) and confidential raw testimonies (`[CONFIDENTIAL_TESTIMONY_WITHHELD_PUBLICLY]`), while enforcing duplicate `trackToken` rejection and strict status transitions (`VALID_TRANSITIONS`). Portal UI/UX ratings (dual 1–5 scales for UI Clarity & Overall UX) and feature wishlists log cleanly to a dedicated, protected **`Portal_Feedback`** sheet tab (`submitFeedback` action). *(Note: Live Google Apps Script deployments must be updated with the latest `google-sheets-sync.gs` and a new deployment published whenever Apps Script code changes.)*
 * **Firestore Security Rules (`IMPLEMENTED AND TESTED` on local emulator):** `firestore.samadhan.rules` blocks public/student reads of `/grievances`, removes unauthenticated `communicationThread` / withdrawal updates, enforces DPDP consent & anonymous null-PII checks, and isolates `/admin_roles` reads to Admins or the doc owner. Currently `app.js` / `admin.js` operate against Google Sheets + Firebase Auth rather than reading `/grievances` directly from Firestore.
 * **Admin Authentication & Cryptography (`IMPLEMENTED AND TESTED`):** Firebase Google OAuth issues verified ID Tokens for Google Sheet mutations (`verifyAdminIdToken`); optional local workstation quick-unlock passkeys use salted PBKDF2-HMAC-SHA256 (`100,000` iterations) flagged as local read-only sessions; CSV exports use `Blob` URLs (`exportGrievancesCSV`); `enforceDataRetentionPolicy()` purges resolved/withdrawn local cases after 30 days.
 * **Local Ollama Advisory (`ollama-assist.js`, `admin.html` only):** Opt-in, disabled by default (`IMPLEMENTED AND TESTED` with mock fetch; live Ollama runtime `IMPLEMENTED BUT NOT RUNTIME-VERIFIED`), strips PII before inference, enforces `<UNTRUSTED_STUDENT_SUBMISSION>` delimiters, validates strict allowlisted JSON schemas, requires human confirmation, and never auto-modifies statuses.
-* **Automated Verification:** `node test-suite.js` (`30 / 30 TESTS PASSED`) plus emulator verification via `SEWA Canteen` `vitest.rules.config.js` (`samadhan.rules.test.js`).
+* **Automated Verification:** `node test-suite.js` (`32 / 32 TESTS PASSED`) plus emulator verification via `SEWA Canteen` `vitest.rules.config.js` (`samadhan.rules.test.js`).
 
 ---
 
