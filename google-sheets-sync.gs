@@ -37,8 +37,25 @@ var VALID_LIFECYCLE_STAGES = [
   "TRIAGED",
   "INVESTIGATING",
   "ACTION_PROPOSED",
-  "RESOLVED"
+  "RESOLVED",
+  "WITHDRAWN_BY_STUDENT"
 ];
+
+var VALID_CATEGORIES = [
+  "ACADEMIC", "HOSTEL", "INFRASTRUCTURE", "HARASSMENT_RAGGING",
+  "LIBRARY", "TRANSIT_SECURITY", "FINANCIAL", "OTHER"
+];
+
+var VALID_SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
+
+var VALID_TRANSITIONS = {
+  "SUBMITTED": ["TRIAGED", "INVESTIGATING", "WITHDRAWN_BY_STUDENT"],
+  "TRIAGED": ["INVESTIGATING", "ACTION_PROPOSED", "RESOLVED", "WITHDRAWN_BY_STUDENT"],
+  "INVESTIGATING": ["ACTION_PROPOSED", "RESOLVED", "WITHDRAWN_BY_STUDENT"],
+  "ACTION_PROPOSED": ["RESOLVED", "INVESTIGATING", "WITHDRAWN_BY_STUDENT"],
+  "RESOLVED": [],
+  "WITHDRAWN_BY_STUDENT": []
+};
 
 // Public Firebase Web API Key for project udsc-samadhan-2026 (used only to verify Google ID tokens)
 var FIREBASE_WEB_API_KEY = "AIzaSyADjPR2IKldTKQzsRoLrqU4l1iEXK0AlhU";
@@ -315,7 +332,7 @@ function doPost(e) {
       }
 
       var updateToken = String(data.trackToken || "").trim().toUpperCase();
-      if (!/^UDSC-2026-[A-Z]{3,12}-\d{3}$/.test(updateToken)) {
+      if (!/^UDSC-2026-[A-Z]{3,12}-(?:\d{3}|[0-9A-Z]{6,10})$/.test(updateToken)) {
         return ContentService.createTextOutput(JSON.stringify({
           status: "error",
           message: "Invalid tracking token format."
@@ -331,11 +348,19 @@ function doPost(e) {
       }
 
       if (data.action === "updateStatus" && data.status) {
+        var currentStatus = String(sheet.getRange(targetRow, 8).getValue() || "SUBMITTED").trim().toUpperCase();
         var nextStatus = String(data.status).trim().toUpperCase();
         if (VALID_LIFECYCLE_STAGES.indexOf(nextStatus) === -1) {
           return ContentService.createTextOutput(JSON.stringify({
             status: "error",
             message: "Invalid lifecycle status stage."
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+        var allowedNext = VALID_TRANSITIONS[currentStatus] || [];
+        if (currentStatus !== nextStatus && allowedNext.indexOf(nextStatus) === -1) {
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "error",
+            message: "Invalid lifecycle transition from " + currentStatus + " to " + nextStatus + "."
           })).setMimeType(ContentService.MimeType.JSON);
         }
         sheet.getRange(targetRow, 8).setValue(nextStatus);
@@ -360,37 +385,56 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // Strict Validation: Tracking Token format for public intake submission
-    var rawToken = String(data.trackToken || "").trim();
-    if (!/^UDSC-2026-[A-Z]{3,12}-\d{3}$/.test(rawToken)) {
+    // Strict Validation: Tracking Token format & duplicate-token guard for public intake submission
+    var rawToken = String(data.trackToken || "").trim().toUpperCase();
+    if (!/^UDSC-2026-[A-Z]{3,12}-(?:\d{3}|[0-9A-Z]{6,10})$/.test(rawToken)) {
       return ContentService.createTextOutput(JSON.stringify({
         status: "error",
         message: "Invalid tracking token format rejected by security filter."
       })).setMimeType(ContentService.MimeType.JSON);
     }
-    
-    // Strict DPDP Act 2023 Privacy Enforcement
-    var isAnon = data.privacyMode && data.privacyMode.indexOf("ANONYMOUS") !== -1;
-    var complainant = isAnon ? "ANONYMOUS (WHISTLEBLOWER SHIELDED)" : sanitizeSpreadsheetCell(String(data.studentName || "Student").substring(0, 100));
-    var email = isAnon ? "[REDACTED_UNDER_DPDP_ACT]" : sanitizeSpreadsheetCell(String(data.studentEmail || "N/A").substring(0, 100));
-    var phone = isAnon ? "[REDACTED_UNDER_DPDP_ACT]" : sanitizeSpreadsheetCell(String(data.studentPhone || "N/A").substring(0, 30));
-    var privacyLabel = isAnon ? "ANONYMOUS (WHISTLEBLOWER SHIELD)" : "IDENTIFIED (CONSENTED)";
-    
+
+    if (findRowByTrackToken(sheet, rawToken) !== -1) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "error",
+        message: "Duplicate tracking token rejected by idempotency filter."
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var safeCategory = String(data.category || "OTHER").trim().toUpperCase();
+    if (VALID_CATEGORIES.indexOf(safeCategory) === -1) safeCategory = "OTHER";
+
+    var safeSeverity = String(data.severity || "MEDIUM").trim().toUpperCase();
+    if (VALID_SEVERITIES.indexOf(safeSeverity) === -1) safeSeverity = "MEDIUM";
+
+    // Strict DPDP Act 2023 Public Transparency Boundary:
+    // Because the Google Sheet has Viewer sharing ("Anyone with link"), PII and raw confidential
+    // testimonies MUST NEVER be written to this public ledger regardless of consent mode.
+    var isAnon = Boolean(data.privacyMode && String(data.privacyMode).indexOf("ANONYMOUS") !== -1);
+    var complainant = isAnon ? "ANONYMOUS (WHISTLEBLOWER SHIELDED)" : "[PROTECTED_BY_DPDP_PRIVACY_BOUNDARY]";
+    var email = "[REDACTED_PUBLIC_LEDGER]";
+    var phone = "[REDACTED_PUBLIC_LEDGER]";
+    var privacyLabel = isAnon ? "ANONYMOUS (WHISTLEBLOWER SHIELD)" : "IDENTIFIED (PRIVATE CONF. SHIELDED)";
+    var publicTitle = safeCategory === "HARASSMENT_RAGGING"
+      ? "Confidential Safety / POSH Matter (Details Shielded)"
+      : sanitizeSpreadsheetCell(String(data.title || "Student Grievance").substring(0, 120));
+    var publicDesc = "[CONFIDENTIAL_TESTIMONY_WITHHELD_PUBLICLY]";
+
     var row = [
-      data.timestamp || new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+      sanitizeSpreadsheetCell(data.timestamp || new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })),
       rawToken,
-      sanitizeSpreadsheetCell(String(data.category || "GENERAL").substring(0, 50)),
+      sanitizeSpreadsheetCell(safeCategory),
       sanitizeSpreadsheetCell(String(data.department || "South Campus").substring(0, 100)),
-      sanitizeSpreadsheetCell(String(data.title || "Student Grievance").substring(0, 200)),
-      sanitizeSpreadsheetCell(String(data.description || "").substring(0, 3000)),
-      sanitizeSpreadsheetCell(String(data.severity || "MEDIUM").substring(0, 20)),
-      sanitizeSpreadsheetCell(String(data.status || "SUBMITTED").substring(0, 30)),
+      publicTitle,
+      publicDesc,
+      sanitizeSpreadsheetCell(safeSeverity),
+      "SUBMITTED",
       privacyLabel,
       complainant,
       email,
       phone,
       "AFFIRMATIVE (SEC 6 COMPLIANT)",
-      data.slaDeadline || "",
+      sanitizeSpreadsheetCell(String(data.slaDeadline || "").substring(0, 50)),
       ""
     ];
     

@@ -75,6 +75,7 @@ const CATEGORIES = {
   ACADEMIC: { id: 'ACADEMIC', icon: '🎓', label: 'Academic & Examinations' },
   HOSTEL: { id: 'HOSTEL', icon: '🏢', label: 'Hostel & Residential Life' },
   INFRASTRUCTURE: { id: 'INFRASTRUCTURE', icon: '⚡', label: 'Campus Infrastructure & Wi-Fi' },
+  HARASSMENT_RAGGING: { id: 'HARASSMENT_RAGGING', icon: '🛡️', label: 'Anti-Ragging, POSH & Safety' },
   SAFETY_POSH: { id: 'SAFETY_POSH', icon: '🛡️', label: 'Anti-Ragging, POSH & Safety' },
   LIBRARY: { id: 'LIBRARY', icon: '📚', label: 'South Campus Central Library' },
   TRANSIT_SECURITY: { id: 'TRANSIT_SECURITY', icon: '🚌', label: 'Transit, Gates & Security' },
@@ -87,8 +88,18 @@ const LIFECYCLE_STAGES = [
   { key: 'TRIAGED', label: 'Under Union Review', color: 'triaged' },
   { key: 'INVESTIGATING', label: 'Action in Progress', color: 'investigating' },
   { key: 'ACTION_PROPOSED', label: 'Resolution Proposed', color: 'action-proposed' },
-  { key: 'RESOLVED', label: 'Resolved & Closed', color: 'resolved' }
+  { key: 'RESOLVED', label: 'Resolved & Closed', color: 'resolved' },
+  { key: 'WITHDRAWN_BY_STUDENT', label: 'Withdrawn (DPDP Sec 12)', color: 'resolved' }
 ];
+
+const VALID_TRANSITIONS = {
+  SUBMITTED: ['TRIAGED', 'INVESTIGATING', 'WITHDRAWN_BY_STUDENT'],
+  TRIAGED: ['INVESTIGATING', 'ACTION_PROPOSED', 'RESOLVED', 'WITHDRAWN_BY_STUDENT'],
+  INVESTIGATING: ['ACTION_PROPOSED', 'RESOLVED', 'WITHDRAWN_BY_STUDENT'],
+  ACTION_PROPOSED: ['RESOLVED', 'INVESTIGATING', 'WITHDRAWN_BY_STUDENT'],
+  RESOLVED: [],
+  WITHDRAWN_BY_STUDENT: []
+};
 
 // Master Passcode Storage Key Prefix (Initialized privately per workstation)
 const PASSCODE_HASH_STORAGE_KEY = 'samadhan_master_passcode_hash_v5';
@@ -253,14 +264,18 @@ function parseGrievanceRow(row) {
 
   const rawStatus = (row[7] || '').trim().toUpperCase();
   let status = 'SUBMITTED';
-  if (['SUBMITTED', 'TRIAGED', 'INVESTIGATING', 'ACTION_PROPOSED', 'RESOLVED'].includes(rawStatus)) {
+  if (['SUBMITTED', 'TRIAGED', 'INVESTIGATING', 'ACTION_PROPOSED', 'RESOLVED', 'WITHDRAWN_BY_STUDENT'].includes(rawStatus)) {
     status = rawStatus;
   }
 
   const isAnon = (row[8] || '').toUpperCase().includes('ANON') || (row[9] || '').toUpperCase().includes('ANON');
-  const complainant = isAnon ? null : ((row[9] || '').trim() || 'Student');
-  const email = isAnon ? null : (row[10] || '').trim();
-  const phone = isAnon ? null : (row[11] || '').trim();
+  const rawName = (row[9] || '').trim();
+  const isRedactedPublic = !rawName || rawName.includes('PROTECTED_BY_DPDP') || rawName.includes('REDACTED');
+  const complainant = (isAnon || isRedactedPublic) ? null : rawName;
+  const rawEmail = (row[10] || '').trim();
+  const email = (isAnon || rawEmail.includes('REDACTED')) ? null : rawEmail;
+  const rawPhone = (row[11] || '').trim();
+  const phone = (isAnon || rawPhone.includes('REDACTED')) ? null : rawPhone;
 
   const submittedAtDate = parseFlexibleDate(row[0]);
   const submittedAt = submittedAtDate.toISOString();
@@ -351,28 +366,53 @@ function parseGrievanceRow(row) {
 // ============================================================================
 
 async function sha256Hex(text) {
-  if (typeof crypto !== 'undefined' && crypto.subtle) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(text);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  if (!globalThis.crypto?.subtle) {
+    throw new Error('WebCrypto SubtleCrypto unavailable; refusing insecure hash fallback.');
   }
-  // Fallback lightweight hash for node test environments
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) {
-    hash = ((hash << 5) - hash) + text.charCodeAt(i);
-    hash |= 0;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await globalThis.crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashPasscodePbkdf2(password, existingSaltHex = null) {
+  if (!globalThis.crypto?.subtle || !globalThis.crypto?.getRandomValues) {
+    throw new Error('WebCrypto PBKDF2 unavailable; cannot configure workstation passkey.');
   }
-  return Math.abs(hash).toString(16).padStart(64, '0');
+  let saltBytes;
+  if (existingSaltHex) {
+    saltBytes = new Uint8Array(existingSaltHex.length / 2);
+    for (let i = 0; i < saltBytes.length; i++) {
+      saltBytes[i] = parseInt(existingSaltHex.substr(i * 2, 2), 16) || 0;
+    }
+  } else {
+    saltBytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(saltBytes);
+  }
+  const saltHex = Array.from(saltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const keyMaterial = await globalThis.crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(String(password)),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits']
+  );
+  const derived = await globalThis.crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: saltBytes, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    256
+  );
+  const derivedHex = Array.from(new Uint8Array(derived)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `v2$${saltHex}$${derivedHex}`;
 }
 
 function generateSecureToken(bytes = 16) {
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    const arr = new Uint8Array(bytes);
-    crypto.getRandomValues(arr);
-    return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error('Cryptographic RNG (WebCrypto getRandomValues) unavailable; refusing session token.');
   }
-  return 'AUTH-' + Math.random().toString(36).substring(2, 14).toUpperCase();
+  const arr = new Uint8Array(bytes);
+  globalThis.crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
 }
 
 // ============================================================================
@@ -409,6 +449,36 @@ class AdminRepository {
 
     // 3. Per-executive workstation passkeys are initialized privately after Google verification.
     // Zero hardcoded passwords or hashes exist in source code.
+    this.enforceDataRetentionPolicy();
+  }
+
+  enforceDataRetentionPolicy(nowMs = Date.now()) {
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const list = this.getAll();
+    let changed = false;
+    const scrubbed = list.map(g => {
+      if ((g.status === 'RESOLVED' || g.status === 'WITHDRAWN_BY_STUDENT') && !g.dpdpPurged) {
+        const closedRef = g.closedAt || g.timeline?.[g.timeline.length - 1]?.timestamp || g.submittedAt;
+        const closedMs = closedRef ? new Date(closedRef).getTime() : 0;
+        if (closedMs > 0 && (nowMs - closedMs) >= THIRTY_DAYS_MS) {
+          changed = true;
+          return {
+            ...g,
+            studentName: '[PURGED_AFTER_30D_RETENTION]',
+            studentEmail: null,
+            studentPhone: null,
+            description: '[PURGED_UNDER_DPDP_RETENTION_POLICY]',
+            dpdpPurged: true,
+            dpdpPurgedAt: new Date(nowMs).toISOString()
+          };
+        }
+      }
+      return g;
+    });
+    if (changed) {
+      this.saveAll(scrubbed);
+    }
+    return changed;
   }
 
   // --- Executive Profile & Role Authority ---
@@ -541,6 +611,13 @@ class AdminRepository {
     if (!candidatePassword) return false;
     const storedHash = this.getMasterPasscodeHash(email);
     if (!storedHash) return false;
+    if (storedHash.startsWith('v2$')) {
+      const parts = storedHash.split('$');
+      if (parts.length !== 3) return false;
+      const derived = await hashPasscodePbkdf2(candidatePassword, parts[1]);
+      return derived === storedHash;
+    }
+    // Legacy unsalted SHA-256 verification path (auto-upgraded on update)
     const candidateHash = await sha256Hex(candidatePassword);
     return candidateHash === storedHash;
   }
@@ -557,13 +634,13 @@ class AdminRepository {
     if (!newPassword || newPassword.length < 8) {
       return { success: false, message: 'New passkey must be at least 8 characters long.' };
     }
-    const newHash = await sha256Hex(newPassword);
+    const newHash = await hashPasscodePbkdf2(newPassword);
     localStorage.setItem(this.getPasscodeStorageKey(targetEmail), newHash);
     return {
       success: true,
       message: storedHash
-        ? 'Workstation passkey updated for this browser.'
-        : 'Workstation passkey configured for quick sign-in on this browser.'
+        ? 'Workstation passkey upgraded (salted PBKDF2) for this browser.'
+        : 'Workstation passkey configured (salted PBKDF2) for quick local unlock on this browser.'
     };
   }
 
@@ -596,6 +673,7 @@ class AdminRepository {
       badgeLabel: profile.badgeLabel,
       roleTier: profile.roleTier,
       provider: extra.provider || 'password_passkey',
+      isLocalReadOnlySession: (extra.provider || 'password_passkey') === 'device_passkey',
       photoURL: extra.photoURL || null
     };
     localStorage.setItem(this.sessionKey, JSON.stringify(session));
@@ -1617,6 +1695,37 @@ function renderTicketInspectionModal(ticketId) {
           <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">${escapeHtml(g.description)}</div>
         </div>
 
+        <!-- Optional Local Ollama Triage Advisory (Admin-Only, Disabled by Default) -->
+        <div class="p-4 bg-slate-950 border border-indigo-500/30 rounded-xl space-y-2.5">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <span class="text-xs font-bold text-indigo-300 block">Local Ollama Triage Advisory (Optional • Advisory Only)</span>
+              <span class="text-[11px] text-slate-400">Disabled by default. PII is stripped locally; no automated status decisions are made.</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                <input type="checkbox" ${typeof SewaOllamaAssist !== 'undefined' && SewaOllamaAssist.isEnabled() ? 'checked' : ''} onchange="toggleOllamaAssist(this.checked)" class="rounded bg-slate-900 border-slate-700 text-indigo-500" />
+                <span>Enable Local Opt-In</span>
+              </label>
+              <button type="button" onclick="runOllamaTriageAdvisory('${escapeHtml(g.ticketId)}')" class="px-2.5 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/40 text-xs font-bold">
+                Analyze Locally
+              </button>
+            </div>
+          </div>
+          ${adminState.ollamaAdvisory && adminState.ollamaAdvisory.ticketId === g.ticketId ? `
+            <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 text-xs space-y-1">
+              ${adminState.ollamaAdvisory.ok ? `
+                <div class="text-emerald-300 font-bold">✓ Human Review Required — Advisory Suggestion (${escapeHtml(adminState.ollamaAdvisory.model || 'llama3.2')}):</div>
+                <div class="text-slate-300">Category: <strong>${escapeHtml(adminState.ollamaAdvisory.advisory.suggestedCategory)}</strong> • Severity: <strong>${escapeHtml(adminState.ollamaAdvisory.advisory.suggestedSeverity)}</strong></div>
+                <div class="text-slate-300">Department: <strong>${escapeHtml(adminState.ollamaAdvisory.advisory.suggestedDepartment)}</strong></div>
+                <div class="text-slate-400 italic">${escapeHtml(adminState.ollamaAdvisory.advisory.neutralSummary)}</div>
+              ` : `
+                <div class="text-amber-300">${escapeHtml(adminState.ollamaAdvisory.reason || 'Ollama offline; fallback inactive.')}</div>
+              `}
+            </div>
+          ` : ''}
+        </div>
+
         <!-- Milestone Status Advance Form -->
         <div class="p-4 bg-slate-950 border-2 border-slate-800 rounded-xl space-y-2.5">
           <div>
@@ -1624,19 +1733,24 @@ function renderTicketInspectionModal(ticketId) {
               Update Grievance Status
             </label>
             <p class="text-[11px] text-slate-400">
-              Select the current stage. Updates publish live to the Public Transparency Sheet and Student Tracker.
+              Select the next valid stage. Updates publish live to the Public Transparency Sheet and Student Tracker.
             </p>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            ${LIFECYCLE_STAGES.map(s => `
+            ${LIFECYCLE_STAGES.map(s => {
+              const isCurrent = g.status === s.key;
+              const isAllowed = isCurrent || (VALID_TRANSITIONS[g.status] || []).includes(s.key);
+              return `
               <button 
                 type="button"
+                ${!isAllowed ? 'disabled' : ''}
                 onclick="updateTicketMilestone('${escapeHtml(g.ticketId)}', '${s.key}')" 
-                class="px-2.5 py-2 text-xs font-bold rounded-lg border-2 transition ${g.status === s.key ? 'bg-amber-500 text-black border-amber-400 font-black shadow-sm' : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500'}"
+                class="px-2.5 py-2 text-xs font-bold rounded-lg border-2 transition ${isCurrent ? 'bg-amber-500 text-black border-amber-400 font-black shadow-sm' : (!isAllowed ? 'bg-slate-950 text-slate-600 border-slate-800 opacity-50 cursor-not-allowed' : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500')}"
               >
                 ${escapeHtml(s.label)}
               </button>
-            `).join('')}
+              `;
+            }).join('')}
           </div>
         </div>
 
@@ -2204,9 +2318,38 @@ window.closeInspectionModal = function() {
   renderAdminApp();
 };
 
+window.toggleOllamaAssist = function(checked) {
+  if (typeof SewaOllamaAssist !== 'undefined') {
+    SewaOllamaAssist.setEnabled(Boolean(checked));
+  }
+  adminState.ollamaAdvisory = null;
+  renderAdminApp();
+};
+
+window.runOllamaTriageAdvisory = async function(ticketId) {
+  const g = adminRepo.getAll().find(item => item.ticketId === ticketId || item.trackToken === ticketId);
+  if (!g || typeof SewaOllamaAssist === 'undefined') return;
+  const result = await SewaOllamaAssist.requestLocalOllamaTriage(g);
+  adminState.ollamaAdvisory = { ticketId: g.ticketId, ...result };
+  renderAdminApp();
+};
+
 window.updateTicketMilestone = async function(ticketId, newStage) {
   const session = adminRepo.getSession();
   if (!session) return;
+  const existing = adminRepo.getAll().find(item => item.ticketId === ticketId || item.trackToken === ticketId);
+  if (!existing) return;
+  if (existing.status !== newStage) {
+    const allowed = VALID_TRANSITIONS[existing.status] || [];
+    if (!allowed.includes(newStage)) {
+      adminState.syncBanner = {
+        type: 'warning',
+        message: `Blocked invalid lifecycle transition from ${existing.status} to ${newStage}.`
+      };
+      renderAdminApp();
+      return;
+    }
+  }
   const profile = adminRepo.getExecutiveProfile(session.email);
   const stageObj = LIFECYCLE_STAGES.find(s => s.key === newStage);
   const stageLabel = stageObj ? stageObj.label : newStage;
@@ -2214,6 +2357,9 @@ window.updateTicketMilestone = async function(ticketId, newStage) {
 
   const updated = adminRepo.update(ticketId, g => {
     g.status = newStage;
+    if (newStage === 'RESOLVED' || newStage === 'WITHDRAWN_BY_STUDENT') {
+      g.closedAt = new Date().toISOString();
+    }
     g.pendingSheetSync = true;
     g.localModifiedAt = Date.now();
     g.timeline = g.timeline || [];
@@ -2490,7 +2636,7 @@ window.handleSuccessionExecution = async function(e) {
   });
   adminRepo.addWhitelistedEmail(email, session.email);
 
-  alert(`✓ Dual-Custody Succession Complete!\n\nSHA-256 Certificate: ${certHash.substring(0, 24)}...\nAdministrative responsibility transferred to ${name}.`);
+  alert(`✓ Local Dual-Custody Succession Entry Recorded!\n\nSHA-256 Digest: ${certHash.substring(0, 24)}...\nWorkstation registry updated for ${name}.\n\nNote: Live Firestore /admin_succession_ledger persistence requires Firebase Admin Console / backend write authorization.`);
   adminState.activeHandshake = null;
   renderAdminApp();
 };
@@ -2524,14 +2670,16 @@ window.exportGrievancesCSV = function() {
     sanitizeCsvField(g.title || '')
   ]);
 
-  const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-  const encodedUri = encodeURI(csvContent);
+  const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const blobUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
+  link.setAttribute("href", blobUrl);
   link.setAttribute("download", `SAMADHAN_UDSC_Grievances_${new Date().toISOString().split('T')[0]}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(blobUrl);
 };
 
 // ============================================================================

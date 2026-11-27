@@ -45,8 +45,11 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     match /grievances/{ticketId} {
       
-      // Public Read: Any student with matching Track Token or secretKeyHash, OR authenticated admin
-      allow read: if true; 
+      // Confidential Read Boundary:
+      // Because Spark-tier rules cannot perform server-side secret-key verification for anonymous
+      // public queries without exposing records, confidential grievance documents and testimonies
+      // are readable ONLY by authenticated department liaisons / Union executives.
+      allow read: if isAdmin() && isDeptLiaison(resource.data.department);
 
       // Creation: Students can register grievances systematically
       allow create: if 
@@ -54,15 +57,20 @@ service cloud.firestore {
         request.resource.data.dpdpConsent == true &&
         request.resource.data.dpdpConsentTimestamp is timestamp &&
         
-        // 2. Strict Data Minimization & Field Types
+        // 2. Strict Data Minimization, Format & Field Size Bounds
         request.resource.data.trackToken is string &&
-        request.resource.data.trackToken.size() > 5 &&
+        request.resource.data.trackToken.matches('^UDSC-2026-[A-Z]{3,12}-(?:[0-9]{3}|[0-9A-Z]{6,10})$') &&
         request.resource.data.category in ['ACADEMIC', 'HOSTEL', 'INFRASTRUCTURE', 'HARASSMENT_RAGGING', 'LIBRARY', 'TRANSIT_SECURITY', 'FINANCIAL', 'OTHER'] &&
         request.resource.data.status == 'SUBMITTED' &&
         request.resource.data.severity in ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] &&
+        (!('title' in request.resource.data) || (request.resource.data.title is string && request.resource.data.title.size() <= 250)) &&
+        (!('description' in request.resource.data) || (request.resource.data.description is string && request.resource.data.description.size() <= 4000)) &&
+        (!('secretKeyHash' in request.resource.data) || (request.resource.data.secretKeyHash is string && request.resource.data.secretKeyHash.size() == 64)) &&
         
         // 3. Department Scoping (Must be valid South Delhi Campus location)
         request.resource.data.department is string &&
+        request.resource.data.department.size() > 0 &&
+        request.resource.data.department.size() <= 150 &&
         
         // 4. Anonymous Mode Privacy Verification
         (
@@ -75,20 +83,24 @@ service cloud.firestore {
           )
         );
 
-      // Updates: Restricted to authorized Admins OR student posting messages to thread
-      allow update: if 
-        // A) Authorized Admin updating status, notes, or assignment
-        (isAdmin() && isDeptLiaison(resource.data.department)) ||
-        
-        // B) Student adding a follow-up clarification message without altering core data
+      // Updates: Restricted strictly to authenticated, department-authorized Union Admins.
+      // Unauthenticated thread injection and unauthenticated withdrawal mutations are disabled.
+      // Enforces monotonic lifecycle boundaries so RESOLVED / WITHDRAWN_BY_STUDENT cases cannot be reopened.
+      allow update: if
+        isAdmin() &&
+        isDeptLiaison(resource.data.department) &&
+        !(resource.data.status in ['RESOLVED', 'WITHDRAWN_BY_STUDENT']) &&
+        request.resource.data.status in ['SUBMITTED', 'TRIAGED', 'INVESTIGATING', 'ACTION_PROPOSED', 'RESOLVED', 'WITHDRAWN_BY_STUDENT'] &&
+        request.resource.data.trackToken == resource.data.trackToken &&
+        request.resource.data.isAnonymous == resource.data.isAnonymous &&
+        request.resource.data.category == resource.data.category &&
         (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['communicationThread', 'lastStudentUpdateTimestamp'])
-        ) ||
-        
-        // C) Student exercising DPDP Section 12 Right to Erasure / Cancellation
-        (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancellationReason', 'closedAt']) &&
-          request.resource.data.status == 'WITHDRAWN_BY_STUDENT'
+          resource.data.isAnonymous == false ||
+          (
+            (!('studentName' in request.resource.data) || request.resource.data.studentName == null) &&
+            (!('studentEmail' in request.resource.data) || request.resource.data.studentEmail == null) &&
+            (!('studentPhone' in request.resource.data) || request.resource.data.studentPhone == null)
+          )
         );
 
       // Deletes: Completely disallowed. Retained for statutory audit until 30-day purge lifecycle.
@@ -99,7 +111,8 @@ service cloud.firestore {
     // Admin Roles & RBAC (/admin_roles/{uid})
     // -------------------------------------------------------------------------
     match /admin_roles/{uid} {
-      allow read: if isAuthenticated();
+      // Only active Admins or the owner UID can read their own role assignment (prevents admin roster enumeration)
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == uid);
       // Only active Super-Admin can create or update admin roles
       allow write: if isSuperAdmin();
     }

@@ -10,7 +10,14 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = parseInt(process.argv[2] || process.env.PORT || '3000', 10);
-const PUBLIC_DIR = __dirname;
+const PUBLIC_DIR = path.resolve(__dirname);
+
+const SECURITY_HEADERS = {
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'Referrer-Policy': 'no-referrer'
+};
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=UTF-8',
@@ -23,15 +30,30 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  // Normalize URL to prevent directory traversal
-  let safePath = path.normalize(decodeURI(req.url.split('?')[0])).replace(/^(\.\.[\/\\])+/, '');
-  if (safePath === '/' || safePath === '\\') {
-    safePath = '/index.html';
-  } else if (safePath === '/admin' || safePath === '\\admin') {
-    safePath = '/admin.html';
+  let reqPath = '/';
+  try {
+    reqPath = decodeURI((req.url || '/').split('?')[0]);
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'text/plain', ...SECURITY_HEADERS });
+    res.end('400 Bad Request');
+    return;
   }
 
-  const filePath = path.join(PUBLIC_DIR, safePath);
+  let safePath = path.normalize(reqPath).replace(/^(\.\.[\/\\])+/, '');
+  if (safePath === '/' || safePath === '\\') {
+    safePath = 'index.html';
+  } else if (safePath === '/admin' || safePath === '\\admin') {
+    safePath = 'admin.html';
+  } else {
+    safePath = safePath.replace(/^[\/\\]+/, '');
+  }
+
+  const filePath = path.resolve(PUBLIC_DIR, safePath);
+  if (filePath !== PUBLIC_DIR && !filePath.startsWith(PUBLIC_DIR + path.sep)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain', ...SECURITY_HEADERS });
+    res.end('403 Forbidden');
+    return;
+  }
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
@@ -39,11 +61,11 @@ const server = http.createServer((req, res) => {
       const fallbackPath = path.join(PUBLIC_DIR, 'index.html');
       fs.readFile(fallbackPath, (fallbackErr, content) => {
         if (fallbackErr) {
-          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.writeHead(404, { 'Content-Type': 'text/plain', ...SECURITY_HEADERS });
           res.end('404 Not Found');
           return;
         }
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8', ...SECURITY_HEADERS });
         res.end(content);
       });
       return;
@@ -54,9 +76,7 @@ const server = http.createServer((req, res) => {
 
     res.writeHead(200, {
       'Content-Type': contentType,
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'SAMEORIGIN'
+      ...SECURITY_HEADERS
     });
 
     const stream = fs.createReadStream(filePath);

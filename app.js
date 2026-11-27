@@ -533,14 +533,18 @@ function parseGrievanceRow(row) {
 
   const rawStatus = (row[7] || '').trim().toUpperCase();
   let status = 'SUBMITTED';
-  if (['SUBMITTED', 'TRIAGED', 'INVESTIGATING', 'ACTION_PROPOSED', 'RESOLVED'].includes(rawStatus)) {
+  if (['SUBMITTED', 'TRIAGED', 'INVESTIGATING', 'ACTION_PROPOSED', 'RESOLVED', 'WITHDRAWN_BY_STUDENT'].includes(rawStatus)) {
     status = rawStatus;
   }
 
   const isAnon = (row[8] || '').toUpperCase().includes('ANON') || (row[9] || '').toUpperCase().includes('ANON');
-  const complainant = isAnon ? null : ((row[9] || '').trim() || 'Student');
-  const email = isAnon ? null : (row[10] || '').trim();
-  const phone = isAnon ? null : (row[11] || '').trim();
+  const rawName = (row[9] || '').trim();
+  const isRedactedPublic = !rawName || rawName.includes('PROTECTED_BY_DPDP') || rawName.includes('REDACTED');
+  const complainant = (isAnon || isRedactedPublic) ? null : rawName;
+  const rawEmail = (row[10] || '').trim();
+  const email = (isAnon || rawEmail.includes('REDACTED')) ? null : rawEmail;
+  const rawPhone = (row[11] || '').trim();
+  const phone = (isAnon || rawPhone.includes('REDACTED')) ? null : rawPhone;
 
   const submittedAtDate = parseFlexibleDate(row[0]);
   const submittedAt = submittedAtDate.toISOString();
@@ -645,6 +649,40 @@ class GrievanceRepository {
     if (!localStorage.getItem(this.storageKey)) {
       localStorage.setItem(this.storageKey, JSON.stringify([]));
     }
+    this.enforceDataRetentionPolicy();
+  }
+
+  /**
+   * DPDP Act 2023 Sec 8(7) Retention Enforcement:
+   * Automatically scrub personal identifiers and complaint testimonies 30 days post resolution/withdrawal.
+   */
+  enforceDataRetentionPolicy(nowMs = Date.now()) {
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const list = this.getAll();
+    let changed = false;
+    const scrubbed = list.map(g => {
+      if ((g.status === 'RESOLVED' || g.status === 'WITHDRAWN_BY_STUDENT') && !g.dpdpPurged) {
+        const closedRef = g.closedAt || g.timeline?.[g.timeline.length - 1]?.timestamp || g.submittedAt;
+        const closedMs = closedRef ? new Date(closedRef).getTime() : 0;
+        if (closedMs > 0 && (nowMs - closedMs) >= THIRTY_DAYS_MS) {
+          changed = true;
+          return {
+            ...g,
+            studentName: '[PURGED_AFTER_30D_RETENTION]',
+            studentEmail: null,
+            studentPhone: null,
+            description: '[PURGED_UNDER_DPDP_RETENTION_POLICY]',
+            dpdpPurged: true,
+            dpdpPurgedAt: new Date(nowMs).toISOString()
+          };
+        }
+      }
+      return g;
+    });
+    if (changed) {
+      this.saveAll(scrubbed);
+    }
+    return changed;
   }
 
   getAll() {
@@ -752,6 +790,39 @@ const repo = new GrievanceRepository();
 // 3. CRYPTOGRAPHIC HELPERS & TOKEN GENERATORS
 // ============================================================================
 
+const TOKEN_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+function cryptoRandomString(length = 6) {
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error('Cryptographic RNG (WebCrypto getRandomValues) unavailable; cannot issue tracking token.');
+  }
+  const bytes = new Uint8Array(length);
+  globalThis.crypto.getRandomValues(bytes);
+  let out = '';
+  for (let i = 0; i < bytes.length; i++) {
+    out += TOKEN_ALPHABET[bytes[i] % TOKEN_ALPHABET.length];
+  }
+  return out;
+}
+
+async function computeSha256Hex(text) {
+  if (!globalThis.crypto?.subtle) {
+    throw new Error('WebCrypto SubtleCrypto unavailable; cannot hash tracking credential.');
+  }
+  const encoded = new TextEncoder().encode(String(text));
+  const buf = await globalThis.crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function generateTrackingSecretHex() {
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error('WebCrypto getRandomValues unavailable.');
+  }
+  const arr = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 function generateTrackToken(category) {
   const year = '2026';
   const prefixMap = {
@@ -765,8 +836,8 @@ function generateTrackToken(category) {
     OTHER: 'GEN'
   };
   const catCode = prefixMap[category] || 'GEN';
-  const randNum = Math.floor(100 + Math.random() * 900);
-  return `UDSC-${year}-${catCode}-${randNum}`;
+  const randSuffix = cryptoRandomString(6);
+  return `UDSC-${year}-${catCode}-${randSuffix}`;
 }
 
 // ============================================================================
@@ -850,21 +921,28 @@ async function syncGrievanceToGoogleSheet(g) {
   const nowIST = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
   const slaDeadlineIST = g.slaDeadline ? new Date(g.slaDeadline).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '';
 
+  // Strict DPDP Act 2023 Public Transparency Ledger Boundary:
+  // Because the public Google Sheet is world-readable in View-Only mode, personal identifiers
+  // (studentName/Email/Phone) and detailed grievance testimonies MUST NEVER enter the public ledger.
+  const safePublicTitle = g.category === 'HARASSMENT_RAGGING'
+    ? 'Confidential Safety / POSH Matter (Details Shielded)'
+    : sanitizeSpreadsheetCell(String(g.title || 'Student Grievance').substring(0, 120));
+
   const payload = {
-    timestamp: nowIST,
-    trackToken: g.trackToken,
+    timestamp: sanitizeSpreadsheetCell(nowIST),
+    trackToken: sanitizeSpreadsheetCell(g.trackToken),
     category: sanitizeSpreadsheetCell(g.category),
     department: sanitizeSpreadsheetCell(g.department),
-    title: sanitizeSpreadsheetCell(g.title),
-    description: sanitizeSpreadsheetCell(g.description),
+    title: safePublicTitle,
+    description: '[CONFIDENTIAL_TESTIMONY_WITHHELD_PUBLICLY]',
     severity: sanitizeSpreadsheetCell(g.severity),
-    status: sanitizeSpreadsheetCell(g.status),
-    privacyMode: isAnon ? 'ANONYMOUS (WHISTLEBLOWER SHIELDED)' : 'IDENTIFIED (CONSENTED)',
-    studentName: isAnon ? 'ANONYMOUS (WHISTLEBLOWER SHIELDED)' : sanitizeSpreadsheetCell(g.studentName || 'Student'),
-    studentEmail: isAnon ? '[REDACTED_UNDER_DPDP_ACT]' : sanitizeSpreadsheetCell(g.studentEmail || 'N/A'),
-    studentPhone: isAnon ? '[REDACTED_UNDER_DPDP_ACT]' : sanitizeSpreadsheetCell(g.studentPhone || 'N/A'),
+    status: sanitizeSpreadsheetCell(g.status || 'SUBMITTED'),
+    privacyMode: isAnon ? 'ANONYMOUS (WHISTLEBLOWER SHIELDED)' : 'IDENTIFIED (PRIVATE CONF. SHIELDED)',
+    studentName: isAnon ? 'ANONYMOUS (WHISTLEBLOWER SHIELDED)' : '[PROTECTED_BY_DPDP_PRIVACY_BOUNDARY]',
+    studentEmail: '[REDACTED_PUBLIC_LEDGER]',
+    studentPhone: '[REDACTED_PUBLIC_LEDGER]',
     dpdpConsent: 'AFFIRMATIVE (SEC 6 COMPLIANT)',
-    slaDeadline: slaDeadlineIST
+    slaDeadline: sanitizeSpreadsheetCell(slaDeadlineIST)
   };
 
   // 1. Maintain local immutable transparency ledger mirror
@@ -2073,7 +2151,8 @@ window.submitGrievanceWizard = function() {
   state.lastSubmitAt = nowMs;
 
   const token = generateTrackToken(state.selectedCategory);
-  const ticketId = 'TKT-' + Math.floor(1000 + Math.random() * 9000);
+  const ticketId = 'TKT-' + cryptoRandomString(8);
+  const trackingSecret = generateTrackingSecretHex();
   const now = new Date().toISOString();
 
   const slaHours = state.severity === 'CRITICAL' ? 24 : (state.severity === 'HIGH' ? 72 : 168);
@@ -2082,6 +2161,7 @@ window.submitGrievanceWizard = function() {
   const newGrievance = {
     ticketId,
     trackToken: token,
+    secretKeyHash: null, // Computed asynchronously below without leaking raw secret to public ledger
     category: state.selectedCategory,
     title: (state.draftTitle || 'Student Grievance').trim(),
     description: (state.draftDesc || '').trim(),
@@ -2110,7 +2190,13 @@ window.submitGrievanceWizard = function() {
     communicationThread: []
   };
 
-  repo.add(newGrievance);
+  computeSha256Hex(trackingSecret)
+    .then(hashHex => {
+      repo.update(ticketId, item => ({ ...item, secretKeyHash: hashHex }));
+    })
+    .catch(() => {});
+
+  repo.add({ ...newGrievance, receiptSecretPreview: trackingSecret.slice(0, 16) });
   syncGrievanceToGoogleSheet(newGrievance);
 
   // Store last submitted grievance so copy-token re-renders preserve the success screen cleanly
@@ -2269,24 +2355,30 @@ window.closeErasureDialog = function() {
 };
 
 window.confirmRightToErasure = function(ticketId) {
+  const closedAt = new Date().toISOString();
   repo.update(ticketId, g => {
-    g.status = 'RESOLVED';
+    g.status = 'WITHDRAWN_BY_STUDENT';
+    g.title = '[WITHDRAWN & SCRUBBED UNDER DPDP SEC 12]';
+    g.description = '[ERASED BY COMPLAINANT UNDER DPDP ACT 2023 SEC 12]';
     g.studentName = '[ERASED_UNDER_DPDP_SEC_12]';
     g.studentEmail = null;
     g.studentPhone = null;
+    g.closedAt = closedAt;
+    g.dpdpPurged = true;
     g.timeline.push({
-      stage: 'RESOLVED',
-      timestamp: new Date().toISOString(),
-      note: state.language === 'hi' ? 'DPDP कानून 2023 की धारा 12 के तहत डेटा स्थायी रूप से मिटाया गया।' : 'Complainant exercised Section 12 Right to Erasure. Personal records permanently scrubbed.'
+      stage: 'WITHDRAWN_BY_STUDENT',
+      timestamp: closedAt,
+      note: state.language === 'hi' ? 'DPDP कानून 2023 की धारा 12 के तहत डेटा स्थायी रूप से मिटाया गया।' : 'Complainant exercised Section 12 Right to Erasure. Personal records permanently scrubbed on this browser.'
     });
     return g;
   });
 
   state.erasureConfirmTicketId = null;
   state.activeGrievance = repo.getAll().find(item => item.ticketId === ticketId);
+  renderApp();
   showToast(state.language === 'hi'
-    ? 'धारा 12 के तहत आपका व्यक्तिगत डेटा स्थायी रूप से मिटा दिया गया है।'
-    : 'Personal identifiers permanently erased under DPDP Section 12.');
+    ? 'धारा 12 के तहत आपका व्यक्तिगत डेटा स्थानीय ब्राउज़र से मिटा दिया गया है।'
+    : 'Personal identifiers permanently erased from local records under DPDP Section 12.');
 };
 
 window.addEventListener('keydown', (e) => {

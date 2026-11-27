@@ -32,9 +32,9 @@
   Vice-President, SDC Students' Union 2026/27 (M.Sc. Informatics, 1st Semester, Institute of Informatics and Communication, University of Delhi South Campus)
   Designed core full-stack portal architecture, DPDP Act 2023 statutory consent workflows, cryptographic tracking tokens, dual-executive RBAC safeguards, and the Google Sheets bidirectional sync engine.
 
-* Shraddha Choudhary (Ollama API Integration and Local NLP Pipeline)
-  Central Councilor, SDC Students' Union 2026/27 (M.Sc. Informatics, 1st Semester, Institute of Informatics and Communication (IIC), University of Delhi South Campus)
-  Engineered the Ollama API integration into this site. Implemented local model connectivity through Ollama endpoints (/api/generate and /v1/chat/completions) to handle automated grievance categorization, priority scoring, and natural language summary generation directly on local infrastructure. This local pipeline prevents student testimonies and personal details from leaving the campus network, satisfying DPDP Act 2023 data minimization requirements.
+* **Shraddha Choudhary** (*AI/Ollama Triage Concept & Admin Opt-In Specification*)
+  Central Councilor, SDC Students' Union 2026/27 (M.Sc. Informatics, Institute of Informatics and Communication (IIC), University of Delhi South Campus)
+  Designed the local Ollama triage concept (`ollama-assist.js`) to keep analysis on local infrastructure. **Audit Status Clarification:** At initial baseline audit, zero live Ollama code existed (`NOT IMPLEMENTED`); during security remediation, a safe **Admin-Only, Opt-In, Disabled-by-Default Advisory Module (`ollama-assist.js`)** was added with PII stripping, prompt-injection delimiters, strict JSON allowlist validation, and deterministic unreachable fallback (`IMPLEMENTED AND TESTED` via local mock assertions; live local Ollama daemon execution is `IMPLEMENTED BUT NOT RUNTIME-VERIFIED`). Because browsers enforce HTTPS-to-HTTP mixed-content blocks and `localhost` isolation, a deployed HTTPS web portal (`udsc-samadhan-portal.web.app`) cannot silently treat `http://127.0.0.1:11434` as a shared multi-user cloud backend.
 
 * UDSC Students' Union Executive Committee (2026/27)
   Institutional oversight, administrative validation, and liaison with University of Delhi South Campus departments and hostel administrations.
@@ -55,81 +55,13 @@ S.A.M.A.D.H.A.N was built to resolve long-standing operational issues in univers
 
 ---
 
-## 4. System Architecture and Local Ollama API Integration
+## 4. Hardened Architecture, Privacy Boundary & Verification Status
 
-```
-                         Student Browser / Mobile PWA
-                                      │
-            ┌─────────────────────────┴─────────────────────────┐
-            ▼                                                   ▼
-   [Public Intake Wizard]                            [Live Tracking and Telemetry]
-            │                                                   ▲
-            ▼                                                   │
-  Google Apps Script Webhook                                    │
-            │                                                   │
-            ▼                                                   │
-  Google Sheets Public Ledger ──────────────────────────────────┘
-  (Read-only CSV Sync Engine)
-            │
-            ▼
-  [Local AI Classification Pipeline]
-  Ollama API Endpoint: http://localhost:11434
-  • Model: Llama 3.2 (Quantized local inference)
-  • Tasks: Department routing, severity detection, summary generation
-  • Privacy: Zero outbound cloud transmission of student text
-            │
-            ▼
-  Executive Admin Cockpit (/admin)
-  • Role-based dual-executive access (Google OAuth + SHA-256 workstation passkey)
-  • Live status advancement, Official Union Action Notes (JWT-verified), CSV export & handover logs
-```
-
-### Key Technical Subsystems
-
-1. Ollama API Integration:
-   The platform interfaces with Ollama instances running on local infrastructure. When a student lodges a grievance, the system formats the testimony into structured prompts dispatched to `POST /api/generate` or `POST /v1/chat/completions`. The model outputs a predicted department, suggested urgency level, and concise administrative summary without sending student personal identifiers outside the university environment.
-
-2. Bidirectional 15-Column Google Sheets Sync Engine:
-   Submissions logged via Google Apps Script (`google-sheets-sync.gs`) append to a programmatically protected (`lockSheetReadOnly()`), view-only 15-column spreadsheet ending with **Column 15: `Official Union Action Notes`**, styled for on-screen readability (`formatSheetForComfortableViewing`) with formula-injection sanitization. Status updates, action notes (`updateStatus` / `addNote`), and remote layout optimization (`format` / `optimizeLayout`) verify the caller's Firebase Auth ID Token via `verifyAdminIdToken()` before mutating sheet cells. The frontend parses this ledger through an RFC 4180 compliant CSV parser on page load, tab navigation, and tracking lookups.
-
-3. Dual-Executive RBAC & Non-Removability Safeguards:
-   `admin.js` enforces role-scoped executive access between the UDSC Students' Union President (`EXECUTIVE`, focused on grievance triage, lifecycle updates, action notes, CSV export, and ledger access) and the Vice-President & Lead System Architect (`ARCHITECT`, permanently protected root via `isProtectedRoot`). Authentication combines Firebase Google OAuth with SHA-256 workstation passkey verification, anti-brute-force rate limiting (5-minute lockout after 3 consecutive failed attempts), and 1-hour session expiration.
-
-4. Administrative Handover Protocol:
-   A dual-custody cryptographic handshake ensures that executive administrative rights transition cleanly between outgoing and incoming student union representatives. The incoming officer must accept the statutory DPDP oath before administrative credentials update atomically.
-
----
-
-## 5. Five-Stage Lifecycle Audit Flow
-
-Grievances advance through five discrete milestones:
-
-1. SUBMITTED: Complaint recorded, hashed, and issued a tracking token.
-2. TRIAGED: Nodal officer reviews the file and assigns it to the relevant department desk.
-3. INVESTIGATING: Department enquiry initiated, with timestamped progress notes.
-4. ACTION PROPOSED: Remediation plan drafted and shared with the complainant.
-5. RESOLVED: Action verified, issue closed, and 30-day statutory countdown for record sanitization started.
-
----
-
-## 6. Automated Test Suite
-
-A native verification suite (28/28 assertions) validates database isolation, DPDP consent rules, token uniqueness, SLA calculations, dual-executive RBAC, and administrative cryptographic protocols:
-
-```powershell
-node test-suite.js
-```
-
-### Verified Test Categories:
-* Database isolation rules (`firestore.samadhan.rules`), SPA history (`pushState`/`popstate`), and module completeness
-* DPDP Act 2023 Section 6 affirmative consent validation
-* DPDP Act 2023 Section 8 whistleblower privacy and zero PII leakage
-* DPDP Act 2023 Section 12 Right to Erasure scrubbing
-* Alphanumeric token regex validation and collision resistance
-* Statutory SLA deadline generation by urgency tier and 5-stage lifecycle validation
-* Admin multi-factor SHA-256 passcode verification, brute-force lockout, and 1-hour session expiry
-* Dual-executive RBAC scoping and permanent root protection for the Lead System Architect
-* 15-column public ledger RFC 4180 CSV parsing and bidirectional Apps Script synchronization
+* **Public Transparency Ledger Boundary (`IMPLEMENTED AND TESTED` in code/GS):** The view-only Google Sheet (`google-sheets-sync.gs`) excludes complainant identifiers (`studentName`, `studentEmail`, `studentPhone`) and confidential raw testimonies (`[CONFIDENTIAL_TESTIMONY_WITHHELD_PUBLICLY]`), while enforcing duplicate `trackToken` rejection and strict status transitions (`VALID_TRANSITIONS`). *(Note: Existing live Google Apps Script deployments must be manually updated with the latest `google-sheets-sync.gs` and historical sheet rows audited before production reliance.)*
+* **Firestore Security Rules (`IMPLEMENTED AND TESTED` on local emulator):** `firestore.samadhan.rules` blocks public/student reads of `/grievances`, removes unauthenticated `communicationThread` / withdrawal updates, enforces DPDP consent & anonymous null-PII checks, and isolates `/admin_roles` reads to Admins or the doc owner. Currently `app.js` / `admin.js` operate against Google Sheets + Firebase Auth rather than reading `/grievances` directly from Firestore.
+* **Admin Authentication & Cryptography (`IMPLEMENTED AND TESTED`):** Firebase Google OAuth issues verified ID Tokens for Google Sheet mutations (`verifyAdminIdToken`); optional local workstation quick-unlock passkeys use salted PBKDF2-HMAC-SHA256 (`100,000` iterations) flagged as local read-only sessions; CSV exports use `Blob` URLs (`exportGrievancesCSV`); `enforceDataRetentionPolicy()` purges resolved/withdrawn local cases after 30 days.
+* **Local Ollama Advisory (`ollama-assist.js`, `admin.html` only):** Opt-in, disabled by default (`IMPLEMENTED AND TESTED` with mock fetch; live Ollama runtime `IMPLEMENTED BUT NOT RUNTIME-VERIFIED`), strips PII before inference, enforces `<UNTRUSTED_STUDENT_SUBMISSION>` delimiters, validates strict allowlisted JSON schemas, requires human confirmation, and never auto-modifies statuses.
+* **Automated Verification:** `node test-suite.js` (`30 / 30 TESTS PASSED`) plus emulator verification via `SEWA Canteen` `vitest.rules.config.js` (`samadhan.rules.test.js`).
 
 ---
 
