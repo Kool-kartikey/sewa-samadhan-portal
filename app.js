@@ -2625,21 +2625,22 @@ function renderFeedbackModal() {
   const submitted = state.feedbackSubmittedRecord;
 
   return `
-    <div class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle" onclick="if (event.target === this) closeFeedbackModal()">
-      <div id="feedbackModalPanel" class="civic-card civic-card-accent w-full sm:max-w-xl max-h-[92vh] overflow-y-auto rounded-b-none sm:rounded-2xl shadow-2xl space-y-5">
-        <div class="flex items-start justify-between gap-3 border-b border-slate-200 dark:border-zinc-800 pb-3.5">
-          <div class="flex items-start gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
-              ${iconSvg('chat', 'w-5 h-5')}
+    <div class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle" onclick="if (event.target === this) closeFeedbackModal()">
+      <div id="feedbackModalPanel" class="civic-card civic-card-accent !p-0 w-full sm:max-w-xl max-h-[86dvh] sm:max-h-[88dvh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <!-- Sticky Modal Header (Always visible on mobile viewports, never clipped at top) -->
+        <div class="flex-shrink-0 px-4 pt-3.5 pb-3 border-b border-slate-200 dark:border-zinc-800 flex items-start justify-between gap-3">
+          <div class="flex items-start gap-2.5 sm:gap-3 min-w-0">
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              ${iconSvg('chat', 'w-4 h-4 sm:w-5 sm:h-5')}
             </div>
             <div class="min-w-0">
               <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 block">
                 ${t('feedback_badge')}
               </span>
-              <h2 id="feedbackModalTitle" class="text-base sm:text-lg font-extrabold leading-snug">
+              <h2 id="feedbackModalTitle" class="text-sm sm:text-lg font-extrabold leading-snug">
                 ${t('feedback_modal_title')}
               </h2>
-              <p class="text-xs text-slate-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
+              <p class="text-[11px] sm:text-xs text-slate-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
                 ${t('feedback_modal_sub')}
               </p>
             </div>
@@ -2650,7 +2651,7 @@ function renderFeedbackModal() {
         </div>
 
         ${submitted ? `
-          <div class="py-5 text-center space-y-4">
+          <div id="feedbackModalBody" class="flex-1 min-h-0 overflow-y-auto px-4 py-6 text-center space-y-4 overscroll-contain">
             <div class="w-12 h-12 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
               ${iconSvg('check', 'w-6 h-6')}
             </div>
@@ -2672,19 +2673,20 @@ function renderFeedbackModal() {
             </button>
           </div>
         ` : `
-          <div class="p-3 rounded-lg bg-amber-500/5 border border-amber-500/25 flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
-            <span class="text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5">${iconSvg('shield', 'w-4 h-4')}</span>
-            <p class="leading-relaxed text-[11px] sm:text-xs">${t('feedback_privacy_notice')}</p>
-          </div>
-
-          ${state.feedbackError ? `
-            <div role="alert" class="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-700 dark:text-rose-300 flex items-center gap-2">
-              ${iconSvg('alert', 'w-4 h-4 flex-shrink-0')}
-              <span>${escapeHtml(state.feedbackError)}</span>
+          <!-- Independently Scrollable Body -->
+          <div id="feedbackModalBody" class="flex-1 min-h-0 overflow-y-auto px-4 py-3.5 space-y-4 overscroll-contain">
+            <div class="p-3 rounded-lg bg-amber-500/5 border border-amber-500/25 flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+              <span class="text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5">${iconSvg('shield', 'w-4 h-4')}</span>
+              <p class="leading-relaxed text-[11px] sm:text-xs">${t('feedback_privacy_notice')}</p>
             </div>
-          ` : ''}
 
-          <div class="space-y-4">
+            ${state.feedbackError ? `
+              <div role="alert" class="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                ${iconSvg('alert', 'w-4 h-4 flex-shrink-0')}
+                <span>${escapeHtml(state.feedbackError)}</span>
+              </div>
+            ` : ''}
+
             ${renderRatingScaleButtons('ui', state.feedbackUiRating, t('feedback_ui_label'), t('feedback_ui_hint'))}
             ${renderRatingScaleButtons('ux', state.feedbackUxRating, t('feedback_ux_label'), t('feedback_ux_hint'))}
 
@@ -2730,7 +2732,8 @@ function renderFeedbackModal() {
             </div>
           </div>
 
-          <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-zinc-800">
+          <!-- Sticky Action Footer -->
+          <div class="flex-shrink-0 px-4 py-3 border-t border-slate-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 flex items-center justify-end gap-2.5">
             <button type="button" onclick="closeFeedbackModal()" class="btn btn-secondary btn-sm">
               ${t('feedback_cancel_btn')}
             </button>
@@ -2771,13 +2774,13 @@ window.closeFeedbackModal = function() {
 };
 
 function renderWithFeedbackModalScroll(updater) {
-  const prevPanel = document.getElementById('feedbackModalPanel');
-  const savedScrollTop = prevPanel ? prevPanel.scrollTop : 0;
+  const prevBody = document.getElementById('feedbackModalBody');
+  const savedScrollTop = prevBody ? prevBody.scrollTop : 0;
   updater();
   renderApp();
-  const nextPanel = document.getElementById('feedbackModalPanel');
-  if (nextPanel) {
-    nextPanel.scrollTop = savedScrollTop;
+  const nextBody = document.getElementById('feedbackModalBody');
+  if (nextBody) {
+    nextBody.scrollTop = savedScrollTop;
   }
 }
 
@@ -2982,7 +2985,7 @@ function renderPratibaddhaDrawer() {
 
   return `
     <div class="fixed inset-0 md:inset-auto md:bottom-5 md:right-5 z-50 bg-black/60 md:bg-transparent flex items-end md:block" role="dialog" aria-modal="true" aria-labelledby="pratibaddhaTitle" onclick="if (event.target === this) closePratibaddhaChat()">
-      <div class="pratibaddha-drawer w-full md:w-[410px] h-[86dvh] md:h-[min(570px,82vh)] rounded-t-2xl md:rounded-2xl flex flex-col overflow-hidden">
+      <div class="pratibaddha-drawer w-full md:w-[410px] h-[84dvh] max-h-[84dvh] md:h-[min(570px,82dvh)] md:max-h-[82dvh] rounded-t-2xl md:rounded-2xl flex flex-col overflow-hidden">
         <!-- Drawer Header -->
         <div class="px-4 py-3 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-2 bg-slate-50/80 dark:bg-zinc-900/90">
           <div class="flex items-center gap-2.5 min-w-0">
