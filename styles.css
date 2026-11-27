@@ -987,30 +987,41 @@ input.tracking-input::placeholder {
   right: 1.5rem;
   z-index: 40;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.05rem;
-  min-height: 44px;
+  gap: 0.55rem;
+  padding: 0.7rem 1.15rem;
+  min-height: 46px;
   border-radius: 9999px;
-  background-color: var(--header-bg);
-  color: var(--text-main);
-  border: 1.5px solid var(--border-main);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  background-color: #0f172a;
+  color: #ffffff;
+  border: 2px solid #d97706;
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.42), 0 0 0 3px rgba(245, 158, 11, 0.16);
+  font-size: 0.825rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   cursor: pointer;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
 }
 
 .feedback-fab:hover {
   transform: translateY(-2px);
-  border-color: var(--civic-amber-btn);
-  box-shadow: var(--shadow-lg);
+  background-color: #1e293b;
+  box-shadow: 0 16px 34px -4px rgba(15, 23, 42, 0.5), 0 0 0 4px rgba(245, 158, 11, 0.25);
 }
 
 .feedback-fab:active {
   transform: scale(0.97);
+}
+
+[data-theme="dark"] .feedback-fab {
+  background-color: #f59e0b;
+  color: #09090b;
+  border: 2px solid #fef08a;
+  box-shadow: 0 12px 30px -4px rgba(245, 158, 11, 0.45), 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+[data-theme="dark"] .feedback-fab:hover {
+  background-color: #fbbf24;
+  box-shadow: 0 16px 36px -4px rgba(245, 158, 11, 0.55), 0 0 0 4px rgba(254, 240, 138, 0.28);
 }
 
 .rating-scale-group {
@@ -1083,11 +1094,74 @@ input.tracking-input::placeholder {
 }
 
 /* ==========================================================================
-   Pratibaddha (प्रतिबद्ध) — Embedded Civic Assistant Drawer & Front-Page Bar
+   Pratibaddha (प्रतिबद्ध) — Embedded Civic Assistant Drawer, High-Contrast Front Card & Mobile Circular Orb
    ========================================================================== */
+.pratibaddha-front-card {
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 72%);
+  border: 2px solid #b45309;
+  border-top-width: 3.5px;
+  border-radius: 1rem;
+  box-shadow: 0 10px 26px -6px rgba(180, 83, 9, 0.18), var(--shadow-sm);
+  color: var(--text-main);
+}
+
+[data-theme="dark"] .pratibaddha-front-card {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.14) 0%, #1c1c22 72%);
+  border: 2px solid #f59e0b;
+  border-top-width: 3.5px;
+  box-shadow: 0 12px 30px -6px rgba(245, 158, 11, 0.22), var(--shadow-md);
+}
+
+.pratibaddha-mobile-orb {
+  position: fixed;
+  bottom: calc(4.45rem + env(safe-area-inset-bottom, 0px));
+  right: 0.75rem;
+  z-index: 45;
+  width: 74px;
+  height: 74px;
+  border-radius: 9999px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.25rem;
+  background-color: #0f172a;
+  color: #ffffff;
+  border: 2px solid #f59e0b;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.45), 0 0 0 3px rgba(245, 158, 11, 0.18);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pratibaddha-mobile-orb:active {
+  transform: scale(0.95);
+}
+
+[data-theme="dark"] .pratibaddha-mobile-orb {
+  background-color: #f59e0b;
+  color: #09090b;
+  border: 2px solid #fef3c7;
+  box-shadow: 0 10px 28px rgba(245, 158, 11, 0.45), 0 0 0 3px rgba(254, 243, 199, 0.18);
+}
+
+.pratibaddha-orb-label-en {
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.pratibaddha-orb-label-hi {
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
 .pratibaddha-drawer {
   background-color: var(--bg-surface);
-  border: 1.5px solid var(--border-main);
+  border: 2px solid var(--civic-amber-btn);
   box-shadow: var(--shadow-lg);
 }
 

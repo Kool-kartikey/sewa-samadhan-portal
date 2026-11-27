@@ -1256,17 +1256,28 @@ function renderApp() {
       </div>
     </header>
 
-    <!-- Main Container (pb-6 md:pb-20 clears desktop bottom-right feedback trigger without clipping cards) -->
-    <main id="main-content" tabindex="-1" class="max-w-5xl mx-auto px-3 sm:px-6 pt-3 sm:pt-7 pb-6 md:pb-20">
+    <!-- Main Container (pb-24 md:pb-20 clears mobile circular orb + dock and desktop floating pill cleanly) -->
+    <main id="main-content" tabindex="-1" class="max-w-5xl mx-auto px-3 sm:px-6 pt-3 sm:pt-7 pb-24 md:pb-20">
       ${renderActiveTab()}
       ${renderMobileFeedbackStrip()}
     </main>
 
-    <!-- Desktop Unified Floating Pratibaddha Assistant Pill (Hidden on < md so mobile forms stay 100% unobstructed) -->
+    <!-- Desktop Unified Floating Pratibaddha Assistant Pill (Hidden on < md) -->
     <button type="button" onclick="openPratibaddhaChat()" class="feedback-fab hidden md:inline-flex" aria-label="${t('chat_fab_label')}">
-      ${iconSvg('sparkles', 'w-4 h-4 text-amber-600 dark:text-amber-400')}
+      ${iconSvg('sparkles', 'w-4 h-4 text-amber-400 dark:text-zinc-950')}
       <span>${t('chat_fab_label')}</span>
-      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true"></span>
+      <span class="w-2 h-2 rounded-full bg-emerald-400 dark:bg-emerald-700" aria-hidden="true"></span>
+    </button>
+
+    <!-- Mobile High-Contrast Circular Pratibaddha Launcher Orb (< md) -->
+    <button type="button" onclick="openPratibaddhaChat()" class="pratibaddha-mobile-orb md:hidden flex" aria-label="${t('chat_fab_label')}">
+      <span class="relative inline-flex items-center justify-center">
+        ${iconSvg('sparkles', 'w-5 h-5 text-amber-400 dark:text-zinc-950')}
+        <span class="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full bg-emerald-400 dark:bg-emerald-700 ring-1 ring-slate-900 dark:ring-amber-200" aria-hidden="true"></span>
+      </span>
+      <span class="${isHi ? 'pratibaddha-orb-label-hi' : 'pratibaddha-orb-label-en'}">
+        ${isHi ? 'प्रतिबद्ध' : 'Pratibaddha'}
+      </span>
     </button>
 
     <!-- Mobile Thumb-Zone Bottom Dock (< md) -->
@@ -2910,27 +2921,27 @@ function getDefaultWelcomeMessages() {
 function renderPratibaddhaFrontBar() {
   const isHi = state.language === 'hi';
   return `
-    <section class="civic-card civic-card-accent p-3 sm:p-4 space-y-2.5" aria-label="${t('chat_front_badge')}">
+    <section class="hidden md:block pratibaddha-front-card p-4 space-y-3" aria-label="${t('chat_front_badge')}">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-amber-700 text-white dark:bg-amber-500 dark:text-zinc-950 shadow-sm flex items-center justify-center flex-shrink-0">
             ${iconSvg('sparkles', 'w-4 h-4')}
           </div>
           <div class="min-w-0">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm font-extrabold text-slate-950 dark:text-white tracking-tight">
                 ${isHi ? 'प्रतिबद्ध (Pratibaddha)' : 'Pratibaddha (प्रतिबद्ध)'}
               </span>
-              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
+              <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-900 text-amber-300 dark:bg-amber-400 dark:text-zinc-950 border border-amber-500/40">
                 ${isHi ? 'सत्यापित UDSC सहायक' : 'Verified UDSC Concierge'}
               </span>
             </div>
-            <p class="text-[11px] sm:text-xs text-slate-600 dark:text-zinc-400 leading-snug mt-0.5">
+            <p class="text-xs text-slate-700 dark:text-zinc-300 font-medium leading-snug mt-0.5">
               ${t('chat_front_desc')}
             </p>
           </div>
         </div>
-        <button type="button" onclick="openFeedbackModal('Front Bar Shortcut')" class="btn btn-secondary btn-sm text-[11px] whitespace-nowrap">
+        <button type="button" onclick="openFeedbackModal('Front Bar Shortcut')" class="btn btn-secondary btn-sm text-xs whitespace-nowrap">
           ${iconSvg('chat', 'w-3.5 h-3.5 text-amber-700 dark:text-amber-400')}
           <span>${t('feedback_strip_btn')}</span>
         </button>

@@ -719,12 +719,16 @@ it('Pratibaddha (प्रतिबद्ध) Hallucination Killer: Grounded Dir
   assert.strictEqual(abstainRes.sourceType, 'ABSTAIN');
 });
 
-it('Pratibaddha UI Embedding: Safe HTML escaping, Hindi प्रतिबद्ध form, and responsive front-page integration', () => {
+it('Pratibaddha UI Embedding: Safe HTML escaping, Hindi प्रतिबद्ध form, High-Contrast Desktop Card & Mobile Circular Orb', () => {
   const studentApp = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  const stylesheet = fs.readFileSync(path.join(__dirname, 'styles.css'), 'utf8');
   assert.ok(html.includes('pratibaddha.js'), 'index.html must load pratibaddha.js');
   assert.ok(studentApp.includes('प्रतिबद्ध'), 'UI must include Hindi name प्रतिबद्ध');
-  assert.ok(studentApp.includes('renderPratibaddhaFrontBar'), 'Must embed Pratibaddha on the front page');
+  assert.ok(studentApp.includes('renderPratibaddhaFrontBar'), 'Must embed Pratibaddha front-page card on desktop');
+  assert.ok(studentApp.includes('pratibaddha-front-card'), 'Desktop card must apply high-contrast pratibaddha-front-card class');
+  assert.ok(studentApp.includes('pratibaddha-mobile-orb md:hidden'), 'Mobile layout must use dedicated circular launcher orb');
+  assert.ok(stylesheet.includes('.pratibaddha-mobile-orb') && stylesheet.includes('width: 74px') && stylesheet.includes('border-radius: 9999px'), 'Mobile orb must size circular radius cleanly so Pratibaddha / प्रतिबद्ध never wraps or clips');
   assert.ok(studentApp.includes('renderPratibaddhaDrawer'), 'Must render responsive Pratibaddha drawer');
   assert.ok(studentApp.includes('formatChatMarkdownSafe') && studentApp.includes('escapeHtml(rawText'), 'Chat formatter must HTML-escape before markdown rendering');
 });
