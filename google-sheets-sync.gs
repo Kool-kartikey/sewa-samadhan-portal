@@ -86,9 +86,47 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("🏛️ SAMADHAN Portal")
     .addItem("✨ Format Cells for Comfortable Viewing", "formatSheetForComfortableViewing")
+    .addItem("🧹 Scrub Historical PII & Testimonies (DPDP)", "sanitizeExistingPublicLedgerRows")
     .addItem("🔒 Enforce Read-Only Sheet Protection", "lockSheetReadOnly")
     .addItem("🔄 Reset Header Styles", "setupHeaders")
     .addToUi();
+}
+
+/**
+ * One-Click Historical PII & Testimony Redaction (Preserves Case Rows, Metrics & Tracking)
+ * Run once from Apps Script toolbar or via the "🏛️ SAMADHAN Portal" menu after migration.
+ */
+function sanitizeExistingPublicLedgerRows() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return;
+  }
+
+  for (var r = 2; r <= lastRow; r++) {
+    var token = String(sheet.getRange(r, 2).getValue() || "").trim();
+    if (!token) continue;
+
+    var category = String(sheet.getRange(r, 3).getValue() || "").trim().toUpperCase();
+    var privacyVal = String(sheet.getRange(r, 9).getValue() || "").trim().toUpperCase();
+    var isAnon = privacyVal.indexOf("ANON") !== -1;
+
+    if (category.indexOf("HARASS") !== -1 || category.indexOf("SAFETY") !== -1 || category.indexOf("POSH") !== -1) {
+      sheet.getRange(r, 5).setValue("Confidential Safety / POSH Matter (Details Shielded)");
+    }
+    sheet.getRange(r, 6).setValue("[CONFIDENTIAL_TESTIMONY_WITHHELD_PUBLICLY]");
+    sheet.getRange(r, 9).setValue(isAnon ? "ANONYMOUS (WHISTLEBLOWER SHIELD)" : "IDENTIFIED (PRIVATE CONF. SHIELDED)");
+    sheet.getRange(r, 10).setValue(isAnon ? "ANONYMOUS (WHISTLEBLOWER SHIELDED)" : "[PROTECTED_BY_DPDP_PRIVACY_BOUNDARY]");
+    sheet.getRange(r, 11).setValue("[REDACTED_PUBLIC_LEDGER]");
+    sheet.getRange(r, 12).setValue("[REDACTED_PUBLIC_LEDGER]");
+  }
+
+  try {
+    formatSheetLayout(sheet);
+  } catch (e) {}
+  try {
+    SpreadsheetApp.getActiveSpreadsheet().toast("Historical PII & raw testimonies redacted across " + (lastRow - 1) + " rows cleanly.", "🧹 DPDP Scrubbing Complete", 6);
+  } catch (e) {}
 }
 
 /**
