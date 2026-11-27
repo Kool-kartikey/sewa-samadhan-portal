@@ -658,6 +658,77 @@ it('Apps Script Portal_Feedback Tab: Enforces 1-5 integer validation, tab isolat
   assert.ok(gs.includes('sanitizeSpreadsheetCell(String(data.featureWishlist'), 'Must sanitize feature wishlist text against formula injection');
 });
 
+it('Pratibaddha (प्रतिबद्ध) Hallucination Killer: Grounded Director, Union 2026/27, Live Token, BM25 & Abstention', () => {
+  const pratibaddha = require('./pratibaddha.js');
+  const kb = JSON.parse(fs.readFileSync(path.join(__dirname, 'pratibaddha-kb.json'), 'utf8'));
+  assert.ok(Array.isArray(kb.chunks) && kb.chunks.length >= 20, 'Curated UDSC KB must contain grounded chunks');
+  const bm25 = pratibaddha.buildBm25Index(kb.chunks);
+
+  // 1. Director of South Delhi Campus (English + Hindi)
+  const dirEn = pratibaddha.answerQuery('Who is the Director of South Delhi Campus?', { lang: 'en', bm25Index: bm25 });
+  assert.strictEqual(dirEn.grounded, true);
+  assert.strictEqual(dirEn.sourceType, 'VERIFIED_FACT');
+  assert.ok(dirEn.text.includes('Prof. Rajni Abbi'), 'Must cite verified Director of South Delhi Campus');
+  assert.ok(dirEn.text.includes('dir_udsc@du.ac.in'), 'Must include verified dir_udsc@du.ac.in');
+
+  const dirHi = pratibaddha.answerQuery('दक्षिण परिसर के निदेशक कौन हैं?', { lang: 'hi', bm25Index: bm25 });
+  assert.strictEqual(dirHi.grounded, true);
+  assert.ok(dirHi.text.includes('रजनी अब्बी'), 'Hindi response must return grounded Director details');
+
+  // 2. SDC Students' Union 2026/27 office bearers
+  const unionRes = pratibaddha.answerQuery('Who is President and Vice-President of SDC Students Union 2026/27?', { lang: 'en', bm25Index: bm25 });
+  assert.strictEqual(unionRes.grounded, true);
+  assert.ok(unionRes.text.includes('Rawal Singh'));
+  assert.ok(unionRes.text.includes('Kartikey Tiwari'));
+  assert.ok(unionRes.text.includes('Ujjwal Yadav'));
+  assert.ok(unionRes.text.includes('Babulal Saran'));
+
+  // 3. Live Grievance Token lookup
+  const tokenRes = pratibaddha.answerQuery('Status of UDSC-2026-INFRA-999111', {
+    lang: 'en',
+    bm25Index: bm25,
+    lookupToken: tok => tok === 'UDSC-2026-INFRA-999111' ? {
+      trackToken: tok,
+      status: 'INVESTIGATING',
+      department: 'Computer Centre & Campus Wi-Fi',
+      isAnonymous: true,
+      notes: 'Router firmware replacement scheduled.'
+    } : null
+  });
+  assert.strictEqual(tokenRes.grounded, true);
+  assert.strictEqual(tokenRes.sourceType, 'LIVE_LEDGER');
+  assert.ok(tokenRes.text.includes('INVESTIGATING'));
+  assert.ok(tokenRes.text.includes('Router firmware replacement scheduled.'));
+
+  // 4. Feedback / suggestion routing
+  const fbRes = pratibaddha.answerQuery('I want to submit UI/UX feedback and feature suggestions', { lang: 'en', bm25Index: bm25 });
+  assert.strictEqual(fbRes.grounded, true);
+  assert.strictEqual(fbRes.sourceType, 'FEEDBACK_FLOW');
+
+  // 5. BM25 grounded retrieval over live crawled UDSC corpus (e.g. PhD / MSc / Anti-Ragging / IIC)
+  const bm25Hit = pratibaddha.answerQuery('CyPSi lab MSc informatics committees', { lang: 'en', bm25Index: bm25 });
+  assert.strictEqual(bm25Hit.grounded, true);
+  assert.ok(bm25Hit.sourceType === 'BM25_CORPUS' || bm25Hit.sourceType === 'VERIFIED_FACT', 'Must ground response in KB or verified facts');
+
+  const pureBm25Hit = pratibaddha.searchBm25(bm25, 'Ph.D. interdisciplinary research specialization domains informatics', 2);
+  assert.ok(pureBm25Hit.length >= 1 && pureBm25Hit[0].doc.url.includes('iic'), 'Pure BM25 search must retrieve relevant crawled IIC chunk');
+
+  // 6. Out-of-scope hallucination killer abstention
+  const abstainRes = pratibaddha.answerQuery('What is the Mars rover launch schedule for 2031?', { lang: 'en', bm25Index: bm25 });
+  assert.strictEqual(abstainRes.grounded, false);
+  assert.strictEqual(abstainRes.sourceType, 'ABSTAIN');
+});
+
+it('Pratibaddha UI Embedding: Safe HTML escaping, Hindi प्रतिबद्ध form, and responsive front-page integration', () => {
+  const studentApp = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  assert.ok(html.includes('pratibaddha.js'), 'index.html must load pratibaddha.js');
+  assert.ok(studentApp.includes('प्रतिबद्ध'), 'UI must include Hindi name प्रतिबद्ध');
+  assert.ok(studentApp.includes('renderPratibaddhaFrontBar'), 'Must embed Pratibaddha on the front page');
+  assert.ok(studentApp.includes('renderPratibaddhaDrawer'), 'Must render responsive Pratibaddha drawer');
+  assert.ok(studentApp.includes('formatChatMarkdownSafe') && studentApp.includes('escapeHtml(rawText'), 'Chat formatter must HTML-escape before markdown rendering');
+});
+
 // ----------------------------------------------------------------------------
 // FINAL SUMMARY
 // ----------------------------------------------------------------------------

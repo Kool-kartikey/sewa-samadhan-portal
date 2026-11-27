@@ -253,7 +253,17 @@ const I18N = {
     feedback_success_title: "Feedback Recorded — Thank You!",
     feedback_success_desc: "Your ratings and feature suggestions have been logged to improve future UDSC Students' Union releases.",
     feedback_success_id: "Feedback Reference ID",
-    feedback_done_btn: "Return to Portal"
+    feedback_done_btn: "Return to Portal",
+
+    // Pratibaddha (Grounded UDSC Civic Assistant)
+    chat_name: "Pratibaddha",
+    chat_fab_label: "Ask Pratibaddha • प्रतिबद्ध",
+    chat_front_badge: "Pratibaddha • Grounded UDSC Assistant",
+    chat_front_desc: "Ask about UDSC Director, Students' Union 2026/27, grievance status, or share portal feedback.",
+    chat_input_ph: "Ask about Director, Union 2026/27, or paste UDSC-2026-... token",
+    chat_open_btn: "Open Chat",
+    chat_send_btn: "Ask",
+    chat_close_btn: "Close Pratibaddha"
   },
   hi: {
     brand_title: "समाधान (S.A.M.A.D.H.A.N)",
@@ -411,7 +421,17 @@ const I18N = {
     feedback_success_title: "प्रतिक्रिया दर्ज हो गई — धन्यवाद!",
     feedback_success_desc: "आपके सुझाव और रेटिंग भविष्य के पोर्टल सुधारों के लिए रिकॉर्ड कर लिए गए हैं।",
     feedback_success_id: "प्रतिक्रिया संदर्भ आईडी",
-    feedback_done_btn: "पोर्टल पर लौटें"
+    feedback_done_btn: "पोर्टल पर लौटें",
+
+    // प्रतिबद्ध (सत्यापित UDSC सहायक)
+    chat_name: "प्रतिबद्ध",
+    chat_fab_label: "प्रतिबद्ध से पूछें • AI",
+    chat_front_badge: "प्रतिबद्ध • सत्यापित UDSC सहायक",
+    chat_front_desc: "दक्षिण परिसर निदेशक, छात्र संघ 2026/27, शिकायत अपडेट पूछें या पोर्टल प्रतिक्रिया दें।",
+    chat_input_ph: "निदेशक, छात्र संघ 2026/27 या UDSC-2026-... टोकन लिखें",
+    chat_open_btn: "चैट खोलें",
+    chat_send_btn: "पूछें",
+    chat_close_btn: "प्रतिबद्ध बंद करें"
   }
 };
 
@@ -1119,6 +1139,13 @@ const state = {
   feedbackError: null,
   feedbackSubmittedRecord: null,
   lastFeedbackAt: Number((typeof localStorage !== 'undefined' && localStorage.getItem('samadhan_last_feedback_at')) || 0),
+
+  // Pratibaddha (प्रतिबद्ध) Grounded Assistant state
+  chatOpen: false,
+  chatInput: '',
+  chatBusy: false,
+  chatMessages: [],
+  kbIndex: null,
   
   // Track state
   searchToken: '',
@@ -1235,11 +1262,11 @@ function renderApp() {
       ${renderMobileFeedbackStrip()}
     </main>
 
-    <!-- Desktop Floating Portal Feedback Trigger (Hidden on < md so mobile forms stay 100% unobstructed) -->
-    <button type="button" onclick="openFeedbackModal('Desktop Floating Button')" class="feedback-fab hidden md:inline-flex" aria-label="${t('feedback_fab_label')}">
-      ${iconSvg('chat', 'w-4 h-4 text-amber-600 dark:text-amber-400')}
-      <span>${t('feedback_fab_label')}</span>
-      <span class="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
+    <!-- Desktop Unified Floating Pratibaddha Assistant Pill (Hidden on < md so mobile forms stay 100% unobstructed) -->
+    <button type="button" onclick="openPratibaddhaChat()" class="feedback-fab hidden md:inline-flex" aria-label="${t('chat_fab_label')}">
+      ${iconSvg('sparkles', 'w-4 h-4 text-amber-600 dark:text-amber-400')}
+      <span>${t('chat_fab_label')}</span>
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true"></span>
     </button>
 
     <!-- Mobile Thumb-Zone Bottom Dock (< md) -->
@@ -1277,6 +1304,9 @@ function renderApp() {
 
     <!-- Accessible Portal UI/UX Feedback & Feature Request Modal -->
     ${state.feedbackModalOpen ? renderFeedbackModal() : ''}
+
+    <!-- Accessible Pratibaddha (प्रतिबद्ध) Grounded Chat Drawer -->
+    ${state.chatOpen ? renderPratibaddhaDrawer() : ''}
 
     <!-- Institutional Footer -->
     <footer class="site-footer">
@@ -1412,6 +1442,8 @@ function renderRegisterWizard() {
   const progressPct = state.wizardStep === 1 ? '0%' : (state.wizardStep === 2 ? '50%' : '100%');
   return `
     <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
+
+      ${state.wizardStep === 1 ? renderPratibaddhaFrontBar() : ''}
 
       <!-- Unified Compact Assurance & Continuous 3-Step Progress Bar -->
       <nav aria-label="${isHi ? 'शिकायत दर्ज करने की प्रगति' : 'Grievance filing progress'}" class="civic-card py-2.5 sm:py-3.5 px-3.5 sm:px-5 space-y-2.5">
@@ -2491,6 +2523,7 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (state.erasureConfirmTicketId) closeErasureDialog();
     if (state.feedbackModalOpen) closeFeedbackModal();
+    if (state.chatOpen) closePratibaddhaChat();
   }
 });
 
@@ -2517,24 +2550,30 @@ function renderMobileFeedbackStrip() {
     <section class="md:hidden mt-6 civic-card civic-card-accent flex flex-col gap-3" aria-label="${t('feedback_strip_title')}">
       <div class="flex items-start gap-3">
         <div class="w-9 h-9 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-          ${iconSvg('chat', 'w-4 h-4')}
+          ${iconSvg('sparkles', 'w-4 h-4')}
         </div>
         <div class="min-w-0 flex-1">
           <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 block">
-            ${t('feedback_strip_badge')}
+            ${t('chat_front_badge')}
           </span>
           <h3 class="text-sm font-bold text-slate-900 dark:text-white leading-snug mt-0.5">
             ${t('feedback_strip_title')}
           </h3>
           <p class="text-xs text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed">
-            ${t('feedback_strip_sub')}
+            ${t('chat_front_desc')}
           </p>
         </div>
       </div>
-      <button type="button" onclick="openFeedbackModal('Mobile Inline Strip')" class="btn btn-secondary w-full text-xs justify-center">
-        ${iconSvg('sparkles', 'w-4 h-4 text-amber-700 dark:text-amber-400')}
-        <span>${t('feedback_strip_btn')}</span>
-      </button>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" onclick="openPratibaddhaChat()" class="btn btn-primary flex-1 min-w-[130px] text-xs justify-center">
+          ${iconSvg('sparkles', 'w-4 h-4')}
+          <span>${t('chat_open_btn')}</span>
+        </button>
+        <button type="button" onclick="openFeedbackModal('Mobile Inline Strip')" class="btn btn-secondary flex-1 min-w-[130px] text-xs justify-center">
+          ${iconSvg('chat', 'w-4 h-4 text-amber-700 dark:text-amber-400')}
+          <span>${t('feedback_strip_btn')}</span>
+        </button>
+      </div>
     </section>
   `;
 }
@@ -2841,6 +2880,304 @@ window.resetWizard = function() {
 };
 
 // ============================================================================
+// 11.6 PRATIBADDHA (प्रतिबद्ध) — EMBEDDED CONCIERGE & CHAT CONTROLLER
+// ============================================================================
+
+function formatChatMarkdownSafe(rawText) {
+  let safe = escapeHtml(rawText || '');
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>');
+  safe = safe.replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px]">$1</code>');
+  return safe.replace(/\n/g, '<br/>');
+}
+
+function getDefaultWelcomeMessages() {
+  const isHi = state.language === 'hi';
+  return [
+    {
+      role: 'bot',
+      title: isHi ? 'प्रतिबद्ध (Pratibaddha) में आपका स्वागत है' : 'Welcome to Pratibaddha (प्रतिबद्ध)',
+      text: isHi
+        ? 'मैं सत्यापित **UDSC / .south.du.ac.in** जानकारी व **समाधान** शिकायत लेज़र से जुड़ा हूँ। नीचे कोई प्रश्न चुनें या सीधे पूछें।'
+        : 'Grounded in verified **UDSC / .south.du.ac.in** records & the live **S.A.M.A.D.H.A.N** ledger. Pick a prompt or ask your question below.',
+      sourceType: 'WELCOME',
+      actions: [
+        { type: 'open_feedback', label: isHi ? '1–5 UI/UX प्रतिक्रिया दें' : 'Rate Portal UI/UX (1–5)' }
+      ]
+    }
+  ];
+}
+
+function renderPratibaddhaFrontBar() {
+  const isHi = state.language === 'hi';
+  return `
+    <section class="civic-card civic-card-accent p-3 sm:p-4 space-y-2.5" aria-label="${t('chat_front_badge')}">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+            ${iconSvg('sparkles', 'w-4 h-4')}
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                ${isHi ? 'प्रतिबद्ध (Pratibaddha)' : 'Pratibaddha (प्रतिबद्ध)'}
+              </span>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
+                ${isHi ? 'सत्यापित UDSC सहायक' : 'Verified UDSC Concierge'}
+              </span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-600 dark:text-zinc-400 leading-snug mt-0.5">
+              ${t('chat_front_desc')}
+            </p>
+          </div>
+        </div>
+        <button type="button" onclick="openFeedbackModal('Front Bar Shortcut')" class="btn btn-secondary btn-sm text-[11px] whitespace-nowrap">
+          ${iconSvg('chat', 'w-3.5 h-3.5 text-amber-700 dark:text-amber-400')}
+          <span>${t('feedback_strip_btn')}</span>
+        </button>
+      </div>
+
+      <form onsubmit="submitPratibaddhaFrontBar(event)" class="flex items-center gap-2">
+        <input
+          id="pratibaddhaFrontInput"
+          type="text"
+          maxlength="240"
+          placeholder="${t('chat_input_ph')}"
+          class="form-input py-2 text-xs sm:text-sm min-h-[42px] flex-1"
+        />
+        <button type="submit" class="btn btn-primary btn-sm text-xs whitespace-nowrap min-h-[42px]">
+          ${iconSvg('arrowRight', 'w-3.5 h-3.5')}
+          <span>${t('chat_send_btn')}</span>
+        </button>
+      </form>
+
+      <div class="flex flex-wrap gap-1.5">
+        <button type="button" onclick="askPratibaddhaQuick('Who is the Director of South Delhi Campus?')" class="pratibaddha-quick-chip">
+          ${isHi ? 'UDSC निदेशक कौन हैं?' : 'Director of UDSC'}
+        </button>
+        <button type="button" onclick="askPratibaddhaQuick('Who is President and Vice-President of SDC Students Union 2026/27?')" class="pratibaddha-quick-chip">
+          ${isHi ? 'छात्र संघ 2026/27' : 'Students\' Union 2026/27'}
+        </button>
+        <button type="button" onclick="askPratibaddhaQuick('How do I check my grievance status?')" class="pratibaddha-quick-chip">
+          ${isHi ? 'शिकायत स्टेटस जांचें' : 'Check Case Status'}
+        </button>
+      </div>
+    </section>
+  `;
+}
+
+function renderPratibaddhaDrawer() {
+  const isHi = state.language === 'hi';
+  const messages = state.chatMessages.length ? state.chatMessages : getDefaultWelcomeMessages();
+
+  return `
+    <div class="fixed inset-0 md:inset-auto md:bottom-5 md:right-5 z-50 bg-black/60 md:bg-transparent flex items-end md:block" role="dialog" aria-modal="true" aria-labelledby="pratibaddhaTitle" onclick="if (event.target === this) closePratibaddhaChat()">
+      <div class="pratibaddha-drawer w-full md:w-[410px] h-[86dvh] md:h-[min(570px,82vh)] rounded-t-2xl md:rounded-2xl flex flex-col overflow-hidden">
+        <!-- Drawer Header -->
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-2 bg-slate-50/80 dark:bg-zinc-900/90">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              ${iconSvg('sparkles', 'w-4 h-4')}
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <h2 id="pratibaddhaTitle" class="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                  ${isHi ? 'प्रतिबद्ध (Pratibaddha)' : 'Pratibaddha (प्रतिबद्ध)'}
+                </h2>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" aria-hidden="true"></span>
+              </div>
+              <p class="text-[10px] text-slate-500 dark:text-zinc-400 truncate">
+                ${isHi ? 'शून्य-भ्रम (Hallucination-Free) • .south.du.ac.in / UDSC' : 'Grounded UDSC Concierge • Zero Hallucinations'}
+              </p>
+            </div>
+          </div>
+          <button type="button" onclick="closePratibaddhaChat()" aria-label="${t('chat_close_btn')}" class="min-w-[40px] min-h-[40px] rounded-full hover:bg-slate-200 dark:hover:bg-zinc-800 flex items-center justify-center text-slate-600 dark:text-zinc-400 font-bold flex-shrink-0">
+            ✕
+          </button>
+        </div>
+
+        <!-- Quick Prompts Strip -->
+        <div class="px-3 py-2 border-b border-slate-200 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto bg-white/60 dark:bg-zinc-950/40">
+          <button type="button" onclick="askPratibaddhaQuick('Who is the Director of South Delhi Campus?')" class="pratibaddha-quick-chip">
+            ${isHi ? 'निदेशक (UDSC)' : 'Director UDSC'}
+          </button>
+          <button type="button" onclick="askPratibaddhaQuick('Who are the SDC Students Union 2026/27 office bearers?')" class="pratibaddha-quick-chip">
+            ${isHi ? 'छात्र संघ 2026/27' : 'Union 2026/27'}
+          </button>
+          <button type="button" onclick="askPratibaddhaQuick('Check my grievance status')" class="pratibaddha-quick-chip">
+            ${isHi ? 'शिकायत स्थिति' : 'Case Status'}
+          </button>
+          <button type="button" onclick="openFeedbackModal('Pratibaddha Quick Bar')" class="pratibaddha-quick-chip">
+            ${isHi ? 'UI/UX प्रतिक्रिया' : 'Rate UI/UX'}
+          </button>
+        </div>
+
+        <!-- Scrollable Message Transcript -->
+        <div id="pratibaddhaMsgList" class="flex-1 overflow-y-auto p-3.5 space-y-3">
+          ${messages.map(msg => {
+            if (msg.role === 'user') {
+              return `<div class="pratibaddha-msg-user">${escapeHtml(msg.text)}</div>`;
+            }
+            return `
+              <div class="pratibaddha-msg-bot space-y-2">
+                ${msg.title ? `<div class="text-xs font-extrabold text-amber-800 dark:text-amber-400">${escapeHtml(msg.title)}</div>` : ''}
+                <div class="leading-relaxed">${formatChatMarkdownSafe(msg.text)}</div>
+                ${msg.sourceUrl ? `
+                  <div class="pt-1 border-t border-slate-200 dark:border-zinc-700/70">
+                    <a href="${escapeHtml(msg.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 hover:underline">
+                      <span>${escapeHtml(msg.sourceLabel || 'Verified Official Source')}</span>
+                      ${iconSvg('external', 'w-3 h-3')}
+                    </a>
+                  </div>
+                ` : ''}
+                ${Array.isArray(msg.actions) && msg.actions.length ? `
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    ${msg.actions.map(act => {
+                      if (act.type === 'open_feedback') {
+                        return `<button type="button" onclick="closePratibaddhaChat(); openFeedbackModal('Pratibaddha Action')" class="btn btn-primary btn-sm text-[11px] py-1 px-2.5 min-h-[34px]">${escapeHtml(act.label)}</button>`;
+                      }
+                      if (act.type === 'track_token') {
+                        return `<button type="button" onclick="closePratibaddhaChat(); trackSpecificTicket('${escapeHtml(act.token || '')}')" class="btn btn-primary btn-sm text-[11px] py-1 px-2.5 min-h-[34px]">${escapeHtml(act.label)}</button>`;
+                      }
+                      if (act.type === 'navigate') {
+                        return `<button type="button" onclick="closePratibaddhaChat(); navigateTab('${escapeHtml(act.tab || 'track')}')" class="btn btn-secondary btn-sm text-[11px] py-1 px-2.5 min-h-[34px]">${escapeHtml(act.label)}</button>`;
+                      }
+                      if (act.type === 'prompt') {
+                        return `<button type="button" onclick="askPratibaddhaQuick('${escapeHtml(act.value || '')}')" class="pratibaddha-quick-chip">${escapeHtml(act.label)}</button>`;
+                      }
+                      return '';
+                    }).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+          ${state.chatBusy ? `
+            <div class="pratibaddha-msg-bot text-xs text-slate-500 dark:text-zinc-400">
+              ${isHi ? 'सत्यापित स्रोत व लेज़र जांचे जा रहे हैं...' : 'Checking verified UDSC records & live ledger...'}
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Composer -->
+        <form onsubmit="submitPratibaddhaForm(event)" class="p-3 border-t border-slate-200 dark:border-zinc-800 flex items-center gap-2 bg-white dark:bg-zinc-900">
+          <input
+            id="pratibaddhaDrawerInput"
+            type="text"
+            maxlength="240"
+            value="${escapeHtml(state.chatInput)}"
+            oninput="state.chatInput = this.value"
+            placeholder="${t('chat_input_ph')}"
+            class="form-input py-2 text-xs sm:text-sm min-h-[42px] flex-1"
+          />
+          <button type="submit" ${state.chatBusy ? 'disabled' : ''} class="btn btn-primary btn-sm text-xs whitespace-nowrap min-h-[42px]">
+            ${iconSvg('arrowRight', 'w-4 h-4')}
+            <span>${t('chat_send_btn')}</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function scrollPratibaddhaToBottom() {
+  const el = document.getElementById('pratibaddhaMsgList');
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+window.openPratibaddhaChat = function() {
+  if (state.activeTab === 'register' && state.wizardStep === 2) {
+    syncDraftInputsToState();
+  }
+  state.chatOpen = true;
+  if (!state.chatMessages.length) {
+    state.chatMessages = getDefaultWelcomeMessages();
+  }
+  renderApp();
+  scrollPratibaddhaToBottom();
+};
+
+window.closePratibaddhaChat = function() {
+  const drawerEl = document.getElementById('pratibaddhaDrawerInput');
+  if (drawerEl) state.chatInput = drawerEl.value;
+  state.chatOpen = false;
+  renderApp();
+};
+
+window.submitPratibaddhaFrontBar = function(e) {
+  if (e) e.preventDefault();
+  const frontEl = document.getElementById('pratibaddhaFrontInput');
+  const q = frontEl ? frontEl.value.trim() : '';
+  if (!q) {
+    openPratibaddhaChat();
+    return;
+  }
+  frontEl.value = '';
+  askPratibaddhaQuick(q);
+};
+
+window.submitPratibaddhaForm = function(e) {
+  if (e) e.preventDefault();
+  const drawerEl = document.getElementById('pratibaddhaDrawerInput');
+  const q = (drawerEl ? drawerEl.value : state.chatInput).trim();
+  if (!q || state.chatBusy) return;
+  state.chatInput = '';
+  askPratibaddhaQuick(q);
+};
+
+window.askPratibaddhaQuick = async function(rawQuery) {
+  const query = String(rawQuery || '').trim();
+  if (!query || state.chatBusy) return;
+
+  if (!state.chatMessages.length) {
+    state.chatMessages = getDefaultWelcomeMessages();
+  }
+  state.chatOpen = true;
+  state.chatMessages.push({ role: 'user', text: query });
+  state.chatInput = '';
+
+  const engine = typeof window !== 'undefined' ? window.PratibaddhaEngine : null;
+  if (!engine) {
+    state.chatMessages.push({
+      role: 'bot',
+      title: 'Pratibaddha Engine Loading',
+      text: 'Please wait a moment and try again.'
+    });
+    renderApp();
+    scrollPratibaddhaToBottom();
+    return;
+  }
+
+  const detectedToken = engine.detectTrackingToken(query);
+  if (detectedToken && !repo.getByToken(detectedToken)) {
+    state.chatBusy = true;
+    renderApp();
+    scrollPratibaddhaToBottom();
+    try {
+      await repo.syncFromGoogleSheet();
+    } catch (err) {}
+    state.chatBusy = false;
+  }
+
+  const reply = engine.answerQuery(query, {
+    lang: state.language,
+    kbIndex: state.kbIndex,
+    lookupToken: tok => repo.getByToken(tok)
+  });
+
+  state.chatMessages.push({
+    role: 'bot',
+    title: reply.title,
+    text: reply.text,
+    sourceLabel: reply.sourceLabel,
+    sourceUrl: reply.sourceUrl,
+    actions: reply.actions
+  });
+
+  renderApp();
+  scrollPratibaddhaToBottom();
+};
+
+// ============================================================================
 // 12. INITIALIZATION & MOBILE BROWSER HISTORY MANAGEMENT (POPSTATE)
 // ============================================================================
 
@@ -2876,6 +3213,18 @@ window.addEventListener('DOMContentLoaded', () => {
     history.replaceState({ tab: state.activeTab, step: state.wizardStep }, '', window.location.hash || `#${state.activeTab}`);
   }
   renderApp();
+
+  // Asynchronously load grounded Pratibaddha UDSC corpus
+  if (typeof fetch !== 'undefined' && typeof window !== 'undefined' && window.PratibaddhaEngine) {
+    fetch('./pratibaddha-kb.json?v=6.3.0')
+      .then(res => (res.ok ? res.json() : null))
+      .then(kb => {
+        if (kb && Array.isArray(kb.chunks)) {
+          state.kbIndex = window.PratibaddhaEngine.buildBm25Index(kb.chunks);
+        }
+      })
+      .catch(() => {});
+  }
 
   // Asynchronously sync live public transparency ledger on page load
   repo.syncFromGoogleSheet().then(() => {

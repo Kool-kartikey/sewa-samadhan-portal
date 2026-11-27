@@ -10,7 +10,8 @@
         "**/node_modules/**",
         "server.js",
         "test-suite.js",
-        "README.md"
+        "README.md",
+        "tools/**"
       ],
       "rewrites": [
         {
@@ -54,7 +55,8 @@
         "**/node_modules/**",
         "server.js",
         "test-suite.js",
-        "README.md"
+        "README.md",
+        "tools/**"
       ],
       "rewrites": [
         {
@@ -98,7 +100,8 @@
         "**/node_modules/**",
         "server.js",
         "test-suite.js",
-        "README.md"
+        "README.md",
+        "tools/**"
       ],
       "rewrites": [
         {

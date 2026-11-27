@@ -3,7 +3,7 @@
 
 > **Full Form:** **S.A.M.A.D.H.A.N** — *Student Advocacy, Monitoring, Analytics and Digital Heeding of All Needs*  
 > **Root Initiative:** **A Project S.E.W.A. Initiative** (*Systematically Eliminating Worrisome Anomalies*)  
-> **Portal Release:** `v6.2.0`  
+> **Portal Release:** `v6.3.0`  
 > **Statutory Framework:** Digital Personal Data Protection (DPDP) Act, 2023 (India) & UGC (Grievance Redressal of Students) Regulations, 2023  
 > **Quality Standard:** ISO 10002:2018 (Complaints Handling in Organizations)
 
@@ -61,7 +61,8 @@ S.A.M.A.D.H.A.N was built to resolve long-standing operational issues in univers
 * **Firestore Security Rules (`IMPLEMENTED AND TESTED` on local emulator):** `firestore.samadhan.rules` blocks public/student reads of `/grievances`, removes unauthenticated `communicationThread` / withdrawal updates, enforces DPDP consent & anonymous null-PII checks, and isolates `/admin_roles` reads to Admins or the doc owner. Currently `app.js` / `admin.js` operate against Google Sheets + Firebase Auth rather than reading `/grievances` directly from Firestore.
 * **Admin Authentication & Cryptography (`IMPLEMENTED AND TESTED`):** Firebase Google OAuth issues verified ID Tokens for Google Sheet mutations (`verifyAdminIdToken`); optional local workstation quick-unlock passkeys use salted PBKDF2-HMAC-SHA256 (`100,000` iterations) flagged as local read-only sessions; CSV exports use `Blob` URLs (`exportGrievancesCSV`); `enforceDataRetentionPolicy()` purges resolved/withdrawn local cases after 30 days.
 * **Local Ollama Advisory (`ollama-assist.js`, `admin.html` only):** Opt-in, disabled by default (`IMPLEMENTED AND TESTED` with mock fetch; live Ollama runtime `IMPLEMENTED BUT NOT RUNTIME-VERIFIED`), strips PII before inference, enforces `<UNTRUSTED_STUDENT_SUBMISSION>` delimiters, validates strict allowlisted JSON schemas, requires human confirmation, and never auto-modifies statuses.
-* **Automated Verification:** `node test-suite.js` (`32 / 32 TESTS PASSED`) plus emulator verification via `SEWA Canteen` `vitest.rules.config.js` (`samadhan.rules.test.js`).
+* **Pratibaddha (`प्रतिबद्ध`) Grounded Civic Concierge (`IMPLEMENTED AND TESTED`):** Embedded on the front page (`pratibaddha.js`, `pratibaddha-kb.json`, `app.js`) across both Mobile and Desktop layouts with zero hallucination guarantee: combines live Transparency Ledger token lookup (`UDSC-2026-...`), 1-tap `Portal_Feedback` submission routing, pre-verified deterministic institutional facts (South Delhi Campus Directorate & SDC Students' Union 2026/27), and client-side BM25 lexical search over curated `du.ac.in` / `iic.du.ac.in` / `.south.du.ac.in` records (`tools/build_udsc_kb.py`) with strict abstention outside verified sources.
+* **Automated Verification:** `node test-suite.js` (`34 / 34 TESTS PASSED`) plus emulator verification via `SEWA Canteen` `vitest.rules.config.js` (`samadhan.rules.test.js`).
 
 ---
 

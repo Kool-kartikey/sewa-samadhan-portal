@@ -1,0 +1,86 @@
+CLEAN CRAWL REPORT (2026-11-27T13:44:45Z)
+Pages scraped: 27, Chunks built: 53, Errors: 2
+
+ERROR: https://south.du.ac.in/ -> <urlopen error timed out>
+ERROR: https://iic.ac.in/committees/ -> HTTP Error 404: Not Found
+
+[www.du.ac.in] Director South Campus - Delhi University -> https://www.du.ac.in/index.php?page=director-south-campus (652 chars)
+  PREVIEW: Director South Campus | Professor Rajni Abbi | 91-11-27662865, 91-11-24113045 | dir_udsc@du.ac.in | Professor Sanjeev Singh | Joint Director South Campus | Office | University of Delhi South Campus, Benito Juarez Road, New Delhi 110 021 | Email ID : dir_udsc@du.ac.in | (A) North Campus Office : | Tel : 27662865 - Direct (Main Campus) Extn
+
+[www.du.ac.in] South Campus - Delhi University -> https://www.du.ac.in/index.php?page=south-campus (1863 chars)
+  PREVIEW: South Campus | The University of Delhi started the south campus in 1973 as an effort to cope with its expansion. It moved to its present location on Benito Juarez Marg, near Dhaula Kuan, in 1984. Nearest Delhi Metro Station is Durgabai Deshmukh South Campus. The campus is spread across 28 hectares (69 acres). The various
+
+[www.du.ac.in] Students Grievance Redressal - Delhi University -> https://www.du.ac.in/index.php?page=students-grievance-redressal (110 chars)
+  PREVIEW: Students Grievance Redressal | Students Grievance Redressal (SGR) | Last Updated: Wednesday 09-Sep-26 12:17:26 IST
+
+[www.du.ac.in] Hostels - Delhi University -> https://www.du.ac.in/index.php?page=Hostels-at-University-of-Delhi (1077 chars)
+  PREVIEW: Hostels | Rajiv Gandhi Hostel for Girls | www.rghg.du.ac.in | Know More | Under Graduate Hostel for Girls | Ambedkar-Ganguly Students House for Women | www.agshw.du.ac.in | D.S. Kothari Hostel | www.kotharihostel.du.ac.in | Gwyer Hall | www.gwyerhall.du.ac.in | International Student's House | www.ish.du.ac.in | International Students House for 
+
+[www.du.ac.in] Administration - Delhi University -> https://www.du.ac.in/index.php?page=administration (1536 chars)
+  PREVIEW: Administration | The University of Delhi is a premier university of the country and is known for its high standards in teaching and research and attracts eminent scholars to its faculty. It was established in 1922 as a unitary, teaching and residential university by an act of the Central Legislative Assembly. The Preside
+
+[www.du.ac.in] Vice Chancellor - Delhi University -> https://www.du.ac.in/index.php?page=vice-chancellor (8833 chars)
+  PREVIEW: Vice Chancellor | Professor Yogesh Singh | Prof. Yogesh Singh, the 23rd Vice Chancellor of this century old University, assumed the charge of the Vice Chancellor on 8th October, 2021. He is an academician par excellence, a decisive leader with the courage to dream big and bring change, a beloved educationist who has touche
+
+[www.du.ac.in] Registrar - Delhi University -> https://www.du.ac.in/index.php?page=registrar (311 chars)
+  PREVIEW: Registrar | Dr. Vikas Gupta | 27667853 | registrar@du.ac.in | Office | Tel: 011 - 27667853 Ext. 1116 | Fax: 011 - 27666350 | Email: registrar@du.ac.in | Mr. Deepak Sharma, Personal Assistant | Last Updated: Tuesday 10-Oct-23 12:05:45 IST | < View Previous page: Treasurer | You're viewing: Registrar | View Next page: Finance Officer >
+
+[iic.du.ac.in] IIC - Institute of Informatics and Communication -> https://iic.du.ac.in/ (1775 chars)
+  PREVIEW: IIC - Institute of Informatics and Communication | Institute of Informatics and Communication | Empowering the future through technology and communication | Learn MoreOur Programmes | About IIC | The Institute of Informatics and Communication, University of Delhi, has evolved into one of the country's premier institutions since 
+
+[iic.ac.in] iic.ac.in -> https://iic.ac.in/ (2803 chars)
+  PREVIEW: IIC Extends a Warm Welcome to the Freshers | Registration for Ph.D. Programs (Phase II) — Academic Session 2024-25 | The registration process for Phase II of the Ph.D. programs for the Academic Session 2024-25. * Registration Start Date: Friday, April 25, 2025 * Last Date for Registration: Friday, May 09, 2025 Interested c
+
+[iic.ac.in] About IIC -> https://iic.ac.in/about/ (722 chars)
+  PREVIEW: About IIC | The Institute of Informatics and Communication, University of Delhi, has evolved into one of the country's premier institutions since 1997. It targets fulfilling the increasing demand for trained professionals in the Industry. It has been designed by leading academics in the world of computing as well as comm
+
+[iic.ac.in] Contact Us -> https://iic.ac.in/contact-us/ (154 chars)
+  PREVIEW: Contact Us | Institute of Informatics and Communication, University of Delhi, South Campus. Benito Juarez Road, New Delhi - 110021 | 9 am to 5 pm | 011-24157397
+
+[iic.ac.in] MSc Informatics -> https://iic.ac.in/msc-informatics/ (1009 chars)
+  PREVIEW: MSc Informatics | Masters of Science (Informatics) at the University of Delhi is the space where networking, telecommunication, and software collate to enable its students to cater to the growing demands of the industry and to merge as IICians with a brand mark of their own. The focus is on imparting relevant theoretical
+
+[iic.ac.in] PhD -> https://iic.ac.in/phd/ (1400 chars)
+  PREVIEW: PhD | Ph.D. at the Institute of Informatics and Communication focuses on providing interdisciplinary research opportunities in the field of your specialization inorder to solve research problems of domains intersecting with informatics. Ph.D. programs at IIC leverage holistic development of Research Scholars and encourag
+
+[iic.ac.in] Anti Ragging Committee -> https://iic.ac.in/anti-ragging-committee/ (157 chars)
+  PREVIEW: Anti Ragging Committee | Prof. Sanjeev Singh 011-24157397 | Mr. Manoj Sharma 011-24157397 | Ms. Nitisha 011-24157397 | Mr. Pushkar Baranwal 9838510622 | (Ph.D Student)
+
+[iic.ac.in] Sexual Harassment Committee -> https://iic.ac.in/sexual-harassment-committee/ (203 chars)
+  PREVIEW: Sexual Harassment Committee | Prof. Sanjeev Singh 011-24157397 | Mr. Manoj Sharma 011-24157397 | Ms. Nitisha 011-24157397 | Mr. Pushkar Baranwal 9838510622 | (Ph.D Student) | Ms. Loocina 011-24157397 | (M.Sc. Student)
+
+[www.du.ac.in] Proctor - Delhi University -> https://www.du.ac.in/index.php?page=proctor (473 chars)
+  PREVIEW: Proctor | Professor Manoj Kumar Singh | proctor@du.ac.in | Proctorial Board | Prof. Avdhesh Kumar | Jt. Proctor | avdheshkumar1008@gmail.com | Prof. Geeta Sahare | geetasahare@lb.du.ac.in | Dr. Koteswara Rao Peta | krao@south.du.ac.in | Dr. Jyoti Trehan Sharma | jsharma@ip.du.ac.in | Dr. Saurabh Ji | Dy. Proctor | saurav185@gmail.com | Last Updated: 
+
+[iic.ac.in] iic.ac.in -> https://iic.ac.in (2803 chars)
+  PREVIEW: IIC Extends a Warm Welcome to the Freshers | Registration for Ph.D. Programs (Phase II) — Academic Session 2024-25 | The registration process for Phase II of the Ph.D. programs for the Academic Session 2024-25. * Registration Start Date: Friday, April 25, 2025 * Last Date for Registration: Friday, May 09, 2025 Interested c
+
+[iic.ac.in] Anti Smoking Committee -> https://iic.ac.in/anti-smoking-committee/ (110 chars)
+  PREVIEW: Anti Smoking Committee | Prof. Sanjeev Singh 011-24157397 | Mr. Manoj Sharma 011-24157397 | Ms. Nitisha 011-24157397
+
+[iic.ac.in] Student Grievance Committee -> https://iic.ac.in/student-grievance-committee/ (203 chars)
+  PREVIEW: Student Grievance Committee | Prof. Sanjeev Singh 011-24157397 | Mr. Manoj Sharma 011-24157397 | Ms. Nitisha 011-24157397 | Mr. Pushkar Baranwal 9838510622 | (Ph.D Student) | Ms. Loocina 011-24157397 | (M.Sc. Student)
+
+[iic.ac.in] Committee for Caste Based Discrimination -> https://iic.ac.in/committee-for-caste-based-discrimination/ (190 chars)
+  PREVIEW: Committee for Caste Based Discrimination | Prof. Sanjeev Singh 011-24157397 | Mr. Manoj Sharma 011-24157397 | Mr. Pratik Karmakar 9716245771 | (Ph.D Student) | Ms. Loocina 011-24157397 | (M.Sc. Student)
+
+[iic.ac.in] North East Student Grievance Committee -> https://iic.ac.in/north-east-student-grievance-committee/ (173 chars)
+  PREVIEW: North East Student Grievance Committee | Prof. Sanjeev Singh 011-24157397 | Mr. Manoj Sharma 011-24157397 | Ms. Nitisha 011-24157397 | Mr. Pushkar Baranwal 9838510622 | (Ph.D Student)
+
+[iic.ac.in] Internal Complaints Committee -> https://iic.ac.in/internal-complaints-committee/ (164 chars)
+  PREVIEW: Internal Complaints Committee | Prof. Sanjeev Singh 011-24157397 | Mr. Manoj Sharma 011-24157397 | Ms. Nitisha 011-24157397 | Mr. Pushkar Baranwal 9838510622 | (Ph.D Student)
+
+[iic.ac.in] Holi Hooliganism Prevention-Committee -> https://iic.ac.in/holi-hooliganism-prevention-committee/ (472 chars)
+  PREVIEW: Holi Hooliganism Prevention-Committee | A committee has been formed to address Holi-related hooliganism in the department during the upcoming Holi festival. In the event of any untoward incident, the committee will handle the matter in accordance with the rules and regulations of the University of Delhi. The committee co
+
+[iic.ac.in] News & Notices -> https://iic.ac.in/notice/ (883 chars)
+  PREVIEW: News & Notices | notices | IIC Admin | 22 Dec 2022 | Time table 3rd Sem 2024 | Time_table_3rd Sem_2024.pdf | 109 KB | Time table 1st sem 2024 | Time table 1st sem_2024.pdf | 111 KB | Registration for Ph.D. Programs (Phase II) — Academic Session 2024-25 | Registration for Ph.D. Programs (Phase II) — Academic Session 2024-25.pdf | 635 KB | Regist
+
+[iic.ac.in] Registration for Ph.D. Programs (Phase II) — Academic Session 2024-25 -> https://iic.ac.in/registration-for-ph-d-programs-phase-ii-academic-session-2024-25/ (816 chars)
+  PREVIEW: Registration for Ph.D. Programs (Phase II) — Academic Session 2024-25 | Registration for Ph.D. Programs (Phase II) — Academic Session 2024-25 | iicoffice | 28 Apr 2025 | The registration process for Phase II of the Ph.D. programs for the Academic Session 2024-25. | Registration Start Date: Friday, April 25, 2025 | Last Date for Re
+
+[iic.ac.in] Time Table 1st Semester 2024 -> https://iic.ac.in/time-table-1st-semester-2024/ (715 chars)
+  PREVIEW: Time Table 1st Semester 2024 | notices Featured | iicoffice | 30 Jul 2024Time Table 1st Semester 2024 | Registration for Ph.D. Programs (Phase II) — Academic Session 2024-25 | The registration process for Phase II of the Ph.D. programs for the Academic Session 2024-25. * Registration Start Date: Friday, April 25, 2025 * Last Dat
+
+[iic.ac.in] Schedule_Viva Voce _4th Sem 24 -> https://iic.ac.in/schedule_viva-voce-_4th-sem-24-3/ (663 chars)
+  PREVIEW: Schedule_Viva Voce _4th Sem 24 | iicoffice | 11 Jun 2024 | Schedule Viva Voce 4th Sem 24 | Schedule_Viva Voce _4th Sem 24.pdf | 195 KB | Registration for Ph.D. Programs (Phase II) — Academic Session 2024-25 | The registration process for Phase II of the Ph.D. programs for the Academic Session 2024-25. * Registration Start Date: Frid

@@ -1081,3 +1081,63 @@ input.tracking-input::placeholder {
   color: var(--civic-amber);
   font-weight: 700;
 }
+
+/* ==========================================================================
+   Pratibaddha (प्रतिबद्ध) — Embedded Civic Assistant Drawer & Front-Page Bar
+   ========================================================================== */
+.pratibaddha-drawer {
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-main);
+  box-shadow: var(--shadow-lg);
+}
+
+.pratibaddha-msg-user {
+  background-color: var(--civic-amber-btn);
+  color: #ffffff;
+  border-radius: 1rem 1rem 0.25rem 1rem;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  max-width: 85%;
+  margin-left: auto;
+  word-break: break-word;
+}
+[data-theme="dark"] .pratibaddha-msg-user {
+  color: #09090b;
+  font-weight: 600;
+}
+
+.pratibaddha-msg-bot {
+  background-color: var(--bg-surface-elevated);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem 1rem 1rem 0.25rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  max-width: 92%;
+  word-break: break-word;
+}
+
+.pratibaddha-quick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 34px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.pratibaddha-quick-chip:hover {
+  border-color: var(--civic-amber-btn);
+  background-color: var(--civic-amber-bg);
+  color: var(--civic-amber);
+}
